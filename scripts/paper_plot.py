@@ -30,6 +30,7 @@ import pandas as pd
 from paperplots import (
     SOFT_EDGE_EDGES,
     SOFT_EDGE_FILLS,
+    SOFT_EDGE_PALETTES,
     TOP_PAPER_PALETTES,
     WEB_INSPIRED_PALETTES,
     ablation_matrix_plot,
@@ -545,15 +546,19 @@ def violin_box_points(
     positions = np.arange(len(order))
 
     parts = ax.violinplot(values, positions=positions, widths=0.72, showmeans=False, showextrema=False, showmedians=False)
-    for body, fill_color, edge_color in zip(parts["bodies"], fill_colors, edge_colors):
+    for pos, body, fill_color, edge_color in zip(positions, parts["bodies"], fill_colors, edge_colors):
+        for path in body.get_paths():
+            vertices = path.vertices
+            vertices[:, 0] = np.minimum(vertices[:, 0], pos - 0.03)
         body.set_facecolor(mcolors.to_rgba(fill_color, 0.66))
         body.set_edgecolor(edge_color)
-        body.set_linewidth(1.05)
+        body.set_linewidth(1.15)
+        body.set_zorder(2)
 
     ax.boxplot(
         values,
-        positions=positions,
-        widths=0.22,
+        positions=positions + 0.10,
+        widths=0.18,
         patch_artist=True,
         showfliers=False,
         medianprops={"color": "#1F2937", "linewidth": 1.35},
@@ -562,33 +567,44 @@ def violin_box_points(
         capprops={"color": "#2F2F2F", "linewidth": 1.0},
     )
     for i, vals in enumerate(values):
-        jitter = rng.normal(0, 0.052, size=vals.size)
+        jitter = rng.normal(0, 0.035, size=vals.size)
         ax.scatter(
-            np.full(vals.size, i) + jitter,
+            np.full(vals.size, i + 0.24) + jitter,
             vals,
-            s=22,
+            s=23,
             facecolors="white",
             edgecolors=edge_colors[i],
-            linewidths=0.72,
-            alpha=0.92,
+            linewidths=0.82,
+            alpha=0.95,
             zorder=4,
         )
         if vals.size:
             mean_val = float(np.mean(vals))
+            median_val = float(np.median(vals))
             ax.scatter(
-                [i],
+                [i + 0.10],
                 [mean_val],
                 marker="D",
-                s=28,
+                s=32,
                 facecolors=fill_colors[i],
                 edgecolors="#111111",
-                linewidths=0.75,
+                linewidths=0.82,
                 zorder=5,
+            )
+            ax.plot([i + 0.18, i + 0.32], [median_val, median_val], color=edge_colors[i], linewidth=1.55, zorder=5)
+            ax.text(
+                i,
+                float(np.nanmax(vals)) + max(float(np.nanstd(vals)), 0.08) * 0.18,
+                f"n={vals.size}",
+                ha="center",
+                va="bottom",
+                fontsize=7.0,
+                color="#6B7280",
             )
 
     ax.set_xticks(positions, order)
     ax.set_ylabel(ylabel or value)
-    ax.set_xlim(-0.55, len(order) - 0.45)
+    ax.set_xlim(-0.62, len(order) - 0.28)
     finite_values = [v for v in values if v.size]
     if finite_values:
         ax.set_ylim(dynamic_ylim(np.concatenate(finite_values), pad_fraction=0.16))
@@ -1383,6 +1399,20 @@ def _demo_grouped(seed: int = 42) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _demo_distribution(seed: int = 66) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+    specs = [
+        ("Control", np.r_[rng.normal(0.92, 0.10, 16), rng.normal(1.18, 0.08, 8)]),
+        ("Variant A", np.r_[rng.gamma(3.2, 0.12, 18) + 0.86, rng.normal(1.58, 0.09, 6)]),
+        ("Variant B", np.r_[rng.normal(1.18, 0.08, 10), rng.normal(1.72, 0.11, 14), [2.08]]),
+        ("Ours", np.r_[rng.normal(1.78, 0.12, 16), rng.normal(2.18, 0.13, 10), [2.55]]),
+    ]
+    rows = []
+    for label, vals in specs:
+        rows.extend({"group": label, "response": float(v)} for v in vals)
+    return pd.DataFrame(rows)
+
+
 def _demo_time(seed: int = 8) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     rows = []
@@ -1469,6 +1499,43 @@ def _demo_sensitivity() -> tuple[np.ndarray, np.ndarray, np.ndarray, list[tuple[
     z = np.asarray(z_rows)
     markers = [(0, 1, z[0, 0]), (3, 2, z[1, 3]), (7, 3, z[2, 7]), (10, 5, z[4, 10]), (14, 6, z[5, 14])]
     return x, layers, z, markers
+
+
+def demo_sem_palette_showcase() -> plt.Figure:
+    """Show the accepted raw-points+SEM style across major soft-edge color families."""
+
+    selections = [
+        ("Blue", 0),
+        ("Green", 1),
+        ("Red", 2),
+        ("Purple", 3),
+        ("Orange", 4),
+        ("Teal", 6),
+        ("Pink", 7),
+        ("Gray", 5),
+    ]
+    fig, axes = plt.subplots(2, 4, figsize=(9.7, 4.6), layout="constrained")
+    for ax, (label, block_idx) in zip(axes.flat, selections):
+        block = SOFT_EDGE_PALETTES[block_idx]
+        data = _demo_grouped(seed=90 + block_idx)
+        bar_scatter_sem(
+            data,
+            "group",
+            "response",
+            ax=ax,
+            ylabel="Response" if block_idx in {0, 4} else "",
+            fill=block["fill"],
+            edge=block["edge"],
+            style="compact",
+            seed=30 + block_idx,
+        )
+        ax.set_title(label, fontsize=8.2, pad=5, color=block["edge"][-1], fontweight="bold")
+        ax.tick_params(axis="x", labelrotation=28, labelsize=6.7)
+        ax.tick_params(axis="y", labelsize=6.8)
+        if block_idx not in {0, 4}:
+            ax.set_ylabel("")
+    fig.suptitle("Raw Points + SEM Palette Families", fontsize=11.2, fontweight="bold")
+    return fig
 
 
 def _demo_rl_panels() -> list[dict[str, object]]:
@@ -1558,7 +1625,7 @@ def _demo_rl_panels() -> list[dict[str, object]]:
 
 def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style_name: str = "rl_benchmark") -> list[Path]:
     if kind == "readme-gallery":
-        selected = ["bars", "bar", "violin", "line", "ablation-matrix", "pareto-scatter", "qual-grid", "uncertainty-map"]
+        selected = ["bars", "sem-palettes", "violin", "line", "ablation-matrix", "pareto-scatter", "qual-grid", "uncertainty-map"]
         made: list[Path] = []
         for item in selected:
             made.extend(demo(item, out_dir, formats, dpi, style_name=style_name))
@@ -1578,11 +1645,18 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
         plt.close(fig)
         style = setup_theme(style_name)
 
+    if kind in {"sem-palettes", "all"}:
+        setup_theme("compact")
+        fig = demo_sem_palette_showcase()
+        made.extend(save_figure(fig, out / "demo_bar_scatter_sem_palettes", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
     if kind in {"violin", "all"}:
         setup_theme("compact")
-        fig, ax = plt.subplots(figsize=(3.45, 2.55), layout="constrained")
-        violin_box_points(grouped, "group", "response", ax=ax, ylabel="Normalized response")
-        ax.set_title("Distribution and samples")
+        fig, ax = plt.subplots(figsize=(4.55, 3.05), layout="constrained")
+        violin_box_points(_demo_distribution(), "group", "response", ax=ax, ylabel="Normalized response")
+        ax.set_title("Distribution: density, box, samples", pad=8)
         made.extend(save_figure(fig, out / "demo_violin_box_points", formats=formats, dpi=dpi))
         plt.close(fig)
         style = setup_theme(style_name)
@@ -2009,6 +2083,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "readme-gallery",
             "bars",
             "bar",
+            "sem-palettes",
             "violin",
             "line",
             "scatter",

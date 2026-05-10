@@ -276,7 +276,7 @@ def pareto_scatter_plot(
     xs = np.asarray(x, dtype=float)
     ys = np.asarray(y, dtype=float)
     sizes = np.asarray(size if size is not None else np.full_like(xs, 85), dtype=float)
-    scaled_sizes = 70 + 130 * (sizes - np.nanmin(sizes)) / max(float(np.nanmax(sizes) - np.nanmin(sizes)), 1e-9)
+    scaled_sizes = 68 + 210 * (sizes - np.nanmin(sizes)) / max(float(np.nanmax(sizes) - np.nanmin(sizes)), 1e-9)
     colors = [_soft_edge(i) for i in range(len(xs))]
     fills = [_soft_fill(i) for i in range(len(xs))]
     order = np.argsort(xs)
@@ -286,26 +286,66 @@ def pareto_scatter_plot(
         if ys[idx] >= best_y:
             frontier.append(int(idx))
             best_y = float(ys[idx])
-    ax.plot(xs[frontier], ys[frontier], color="#111111", linewidth=1.35, linestyle="--", alpha=0.78, zorder=2)
-    ax.scatter(xs, ys, s=scaled_sizes, facecolors=fills, edgecolors=colors, alpha=0.92, linewidth=1.25, zorder=3)
+    frontier = sorted(frontier, key=lambda idx: xs[idx])
+    x_pad = (float(np.nanmax(xs)) - float(np.nanmin(xs))) * 0.10
+    y_pad = (float(np.nanmax(ys)) - float(np.nanmin(ys))) * 0.18
+    ax.set_xlim(float(np.nanmin(xs)) - x_pad, float(np.nanmax(xs)) + x_pad * 1.55)
+    ax.set_ylim(float(np.nanmin(ys)) - y_pad * 0.45, float(np.nanmax(ys)) + y_pad * 0.55)
+    if len(frontier) >= 2:
+        ax.fill_between(
+            xs[frontier],
+            ys[frontier],
+            ax.get_ylim()[0],
+            color="#D8EFE4",
+            alpha=0.48,
+            step=None,
+            zorder=1,
+        )
+        ax.plot(xs[frontier], ys[frontier], color="#111111", linewidth=1.55, linestyle="--", alpha=0.82, zorder=2)
+    frontier_set = set(frontier)
+    ax.scatter(
+        xs,
+        ys,
+        s=scaled_sizes,
+        facecolors=fills,
+        edgecolors=colors,
+        alpha=[0.97 if idx in frontier_set else 0.58 for idx in range(len(xs))],
+        linewidth=[1.55 if idx in frontier_set else 1.0 for idx in range(len(xs))],
+        zorder=3,
+    )
+    offset_pattern = [(7, 7), (7, -12), (8, 5), (-42, 7), (8, -12), (-48, -10), (8, 10), (8, -10), (-48, 6), (8, 6)]
     for idx, (xi, yi, label) in enumerate(zip(xs, ys, labels)):
         is_frontier = idx in frontier
+        dx, dy = offset_pattern[idx % len(offset_pattern)]
         ax.annotate(
             label,
             (xi, yi),
-            xytext=(6, 4 if idx % 2 == 0 else -9),
+            xytext=(dx, dy),
             textcoords="offset points",
-            fontsize=7.5,
+            fontsize=7.4,
             color="#111111" if is_frontier else "#4B5563",
             fontweight="bold" if is_frontier else "normal",
+            arrowprops={
+                "arrowstyle": "-",
+                "color": "#9CA3AF",
+                "linewidth": 0.55,
+                "shrinkA": 2,
+                "shrinkB": 2,
+            }
+            if is_frontier and label.startswith("Ours")
+            else None,
         )
+    if frontier:
+        best_idx = max(frontier, key=lambda idx: ys[idx])
+        ax.scatter([xs[best_idx]], [ys[best_idx]], s=scaled_sizes[best_idx] * 1.12, facecolors="#FFF2B2", edgecolors="#B45309", linewidth=1.7, zorder=4)
+        ax.text(0.03, 0.94, "Pareto-efficient region", transform=ax.transAxes, ha="left", va="top", fontsize=7.4, color="#2F6F57", fontweight="bold")
     if size is not None:
-        legend_sizes = [float(np.nanmin(sizes)), float(np.nanmax(sizes))]
+        legend_sizes = [float(np.nanpercentile(sizes, 25)), float(np.nanpercentile(sizes, 75))]
         handles = [
-            ax.scatter([], [], s=70 + 130 * (v - np.nanmin(sizes)) / max(float(np.nanmax(sizes) - np.nanmin(sizes)), 1e-9), facecolors="#ECECEC", edgecolors="#777777", label=f"{v:g}")
+            ax.scatter([], [], s=68 + 210 * (v - np.nanmin(sizes)) / max(float(np.nanmax(sizes) - np.nanmin(sizes)), 1e-9), facecolors="#ECECEC", edgecolors="#777777", label=f"{v:g}M")
             for v in legend_sizes
         ]
-        ax.legend(handles=handles, title="Params", frameon=False, loc="lower right", fontsize=7.0, title_fontsize=7.2)
+        ax.legend(handles=handles, title="Params", frameon=False, loc="lower right", fontsize=7.0, title_fontsize=7.2, borderpad=0.2, handletextpad=0.8)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title, fontweight="bold", pad=9)
@@ -371,11 +411,11 @@ def demo_ablation_matrix() -> plt.Figure:
 
 
 def demo_pareto_scatter() -> plt.Figure:
-    labels = ["Base", "Fast", "Dense", "Ours-S", "Ours-L"]
-    x = np.array([18, 10, 34, 15, 26])
-    y = np.array([0.71, 0.66, 0.78, 0.81, 0.86])
-    sizes = np.array([95, 70, 150, 105, 135])
-    fig, ax = plt.subplots(figsize=(4.85, 3.35), layout="constrained")
+    labels = ["Tiny", "Fast", "Base", "Aug", "Dense", "MoE", "Ours-S", "Ours-B", "Ours-L"]
+    x = np.array([7.5, 10.0, 15.8, 19.5, 34.0, 29.0, 13.2, 20.8, 26.4])
+    y = np.array([0.58, 0.66, 0.72, 0.76, 0.79, 0.82, 0.80, 0.85, 0.885])
+    sizes = np.array([38, 52, 86, 96, 160, 142, 74, 112, 138])
+    fig, ax = plt.subplots(figsize=(5.35, 3.55), layout="constrained")
     pareto_scatter_plot(ax, x, y, labels, size=sizes, xlabel="Latency (ms)", ylabel="Score")
     return fig
 

@@ -15,9 +15,9 @@ It is designed for the figures researchers actually need: benchmark bar charts, 
 
 All images below are generated demos from this repository, not copied paper figures.
 
-| Bar Charts | Raw Points + SEM | Distribution | Training Curves |
+| Bar Charts | SEM Palettes | Distribution | Training Curves |
 |---|---|---|---|
-| ![Bar charts](assets/gallery/demo_bar_charts.png) | ![Bar SEM](assets/gallery/demo_bar_scatter_sem.png) | ![Distribution](assets/gallery/demo_violin_box_points.png) | ![Training curves](assets/gallery/demo_line_ci.png) |
+| ![Bar charts](assets/gallery/demo_bar_charts.png) | ![SEM palettes](assets/gallery/demo_bar_scatter_sem_palettes.png) | ![Distribution](assets/gallery/demo_violin_box_points.png) | ![Training curves](assets/gallery/demo_line_ci.png) |
 
 | Ablation Matrix | Pareto Trade-off | Qualitative Grid | Uncertainty Map |
 |---|---|---|---|
@@ -49,6 +49,7 @@ Render one figure type:
 
 ```bash
 python scripts/paper_plot.py --demo bars --out paper_plot_demo
+python scripts/paper_plot.py --demo sem-palettes --out paper_plot_demo
 python scripts/paper_plot.py --demo line --out paper_plot_demo
 python scripts/paper_plot.py --demo ablation-matrix --out paper_plot_demo
 python scripts/paper_plot.py --demo pareto-scatter --out paper_plot_demo

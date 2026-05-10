@@ -15,9 +15,9 @@
 
 下方图片全部由本仓库 demo 自动生成，不包含任何论文原图。
 
-| 柱状图 | Raw Points + SEM | 分布图 | 训练曲线 |
+| 柱状图 | 多色系 SEM | 分布图 | 训练曲线 |
 |---|---|---|---|
-| ![柱状图](assets/gallery/demo_bar_charts.png) | ![SEM](assets/gallery/demo_bar_scatter_sem.png) | ![分布图](assets/gallery/demo_violin_box_points.png) | ![训练曲线](assets/gallery/demo_line_ci.png) |
+| ![柱状图](assets/gallery/demo_bar_charts.png) | ![多色系 SEM](assets/gallery/demo_bar_scatter_sem_palettes.png) | ![分布图](assets/gallery/demo_violin_box_points.png) | ![训练曲线](assets/gallery/demo_line_ci.png) |
 
 | 消融矩阵 | Pareto 权衡 | 定性对比 | 不确定性地图 |
 |---|---|---|---|
@@ -49,6 +49,7 @@ python scripts/paper_plot.py --demo readme-gallery --out assets/gallery --format
 
 ```bash
 python scripts/paper_plot.py --demo bars --out paper_plot_demo
+python scripts/paper_plot.py --demo sem-palettes --out paper_plot_demo
 python scripts/paper_plot.py --demo line --out paper_plot_demo
 python scripts/paper_plot.py --demo ablation-matrix --out paper_plot_demo
 python scripts/paper_plot.py --demo pareto-scatter --out paper_plot_demo
