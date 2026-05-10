@@ -28,6 +28,8 @@ import numpy as np
 import pandas as pd
 
 from paperplots import (
+    SOFT_EDGE_EDGES,
+    SOFT_EDGE_FILLS,
     TOP_PAPER_PALETTES,
     ablation_matrix_plot,
     demo_ablation_matrix,
@@ -177,6 +179,7 @@ PALETTES = {
     "rl_pastel": RL_PASTEL_EDGES,
     "ai_semantic": AI_SEMANTIC_ORDER,
     "screenshot": [color for block in SCREENSHOT_PALETTES for color in block["edge"]],
+    "soft_edge": SOFT_EDGE_EDGES,
     "okabe_ito": OKABE_ITO,
     "journal_muted": JOURNAL_MUTED,
     "nature_soft": NATURE_SOFT,
@@ -193,7 +196,11 @@ def _cycle(values: Sequence[str], n: int) -> list[str]:
 def palette(name: str = "ai_semantic", n: int = 6, kind: str = "edge") -> list[str]:
     """Return a deterministic categorical palette."""
 
-    if name == "screenshot":
+    if name in {"screenshot", "soft_edge"}:
+        if name == "soft_edge":
+            source = SOFT_EDGE_FILLS if kind == "fill" else SOFT_EDGE_EDGES
+            colors = source[2::4] or source
+            return _cycle(colors, n)
         colors = [color for block in SCREENSHOT_PALETTES for color in block.get(kind, block["edge"])]
     elif name == "rl_pastel":
         colors = RL_PASTEL_FILLS if kind == "fill" else RL_PASTEL_EDGES
@@ -391,6 +398,25 @@ def _finish_axis(ax: plt.Axes, grid: bool = False) -> None:
         ax.grid(axis="y", color="#E8E8E8", linewidth=0.8, zorder=0)
 
 
+def _paper_panel_axis(ax: plt.Axes, *, grid: bool = True, face: str = "#F6F6F4") -> None:
+    """Apply a stronger top-paper result-panel axis treatment."""
+
+    ax.set_facecolor(face)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#B8B8B8")
+    ax.spines["bottom"].set_color("#B8B8B8")
+    ax.spines["left"].set_linewidth(1.05)
+    ax.spines["bottom"].set_linewidth(1.05)
+    ax.tick_params(axis="both", width=0.9, length=3.2, pad=2.2, colors="#202020")
+    if grid:
+        ax.grid(True, color="#DDDDDD", linewidth=0.72, zorder=0)
+
+
+def _soft_pair(index: int) -> tuple[str, str]:
+    return SOFT_EDGE_FILLS[index % len(SOFT_EDGE_FILLS)], SOFT_EDGE_EDGES[index % len(SOFT_EDGE_EDGES)]
+
+
 def bar_scatter_sem(
     data: pd.DataFrame,
     group: str,
@@ -464,12 +490,13 @@ def violin_box_points(
     ylabel: str | None = None,
     seed: int = 11,
 ) -> plt.Axes:
-    """Draw violin distributions, compact box summaries, and raw points."""
+    """Draw polished distribution panels with density, summary, and raw points."""
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(3.5, 2.6), layout="constrained")
+        _, ax = plt.subplots(figsize=(4.0, 2.85), layout="constrained")
     order = list(order or pd.unique(data[group].dropna()))
-    colors = list(colors or palette("journal_muted", len(order)))
+    edge_colors = list(colors or palette("soft_edge", len(order), "edge"))
+    fill_colors = palette("soft_edge", len(order), "fill")
     rng = np.random.default_rng(seed)
     values = [
         pd.to_numeric(data.loc[data[group] == label, value], errors="coerce").dropna().to_numpy()
@@ -478,10 +505,10 @@ def violin_box_points(
     positions = np.arange(len(order))
 
     parts = ax.violinplot(values, positions=positions, widths=0.72, showmeans=False, showextrema=False, showmedians=False)
-    for body, color in zip(parts["bodies"], colors):
-        body.set_facecolor(mcolors.to_rgba(color, 0.22))
-        body.set_edgecolor(color)
-        body.set_linewidth(0.9)
+    for body, fill_color, edge_color in zip(parts["bodies"], fill_colors, edge_colors):
+        body.set_facecolor(mcolors.to_rgba(fill_color, 0.66))
+        body.set_edgecolor(edge_color)
+        body.set_linewidth(1.05)
 
     ax.boxplot(
         values,
@@ -489,26 +516,43 @@ def violin_box_points(
         widths=0.22,
         patch_artist=True,
         showfliers=False,
-        medianprops={"color": "#222222", "linewidth": 1.2},
-        boxprops={"facecolor": "white", "edgecolor": "#333333", "linewidth": 1.0},
-        whiskerprops={"color": "#333333", "linewidth": 1.0},
-        capprops={"color": "#333333", "linewidth": 1.0},
+        medianprops={"color": "#1F2937", "linewidth": 1.35},
+        boxprops={"facecolor": "white", "edgecolor": "#2F2F2F", "linewidth": 1.05},
+        whiskerprops={"color": "#2F2F2F", "linewidth": 1.0},
+        capprops={"color": "#2F2F2F", "linewidth": 1.0},
     )
     for i, vals in enumerate(values):
-        jitter = rng.normal(0, 0.045, size=vals.size)
+        jitter = rng.normal(0, 0.052, size=vals.size)
         ax.scatter(
             np.full(vals.size, i) + jitter,
             vals,
-            s=18,
-            color=mcolors.to_rgba(colors[i], 0.72),
-            edgecolors="white",
-            linewidths=0.45,
-            zorder=3,
+            s=22,
+            facecolors="white",
+            edgecolors=edge_colors[i],
+            linewidths=0.72,
+            alpha=0.92,
+            zorder=4,
         )
+        if vals.size:
+            mean_val = float(np.mean(vals))
+            ax.scatter(
+                [i],
+                [mean_val],
+                marker="D",
+                s=28,
+                facecolors=fill_colors[i],
+                edgecolors="#111111",
+                linewidths=0.75,
+                zorder=5,
+            )
 
     ax.set_xticks(positions, order)
     ax.set_ylabel(ylabel or value)
-    _finish_axis(ax, grid=True)
+    ax.set_xlim(-0.55, len(order) - 0.45)
+    finite_values = [v for v in values if v.size]
+    if finite_values:
+        ax.set_ylim(dynamic_ylim(np.concatenate(finite_values), pad_fraction=0.16))
+    _paper_panel_axis(ax, grid=True)
     return ax
 
 
@@ -939,15 +983,18 @@ def line_ci(
     ci: float = 1.96,
 ) -> plt.Axes:
     if ax is None:
-        _, ax = plt.subplots(figsize=(3.6, 2.4), layout="constrained")
+        _, ax = plt.subplots(figsize=(4.4, 2.8), layout="constrained")
     groups: list[tuple[str, pd.DataFrame]]
     if group:
         groups = list(data.groupby(group, dropna=False))
     else:
         groups = [("", data)]
-    colors = list(colors or palette("ai_semantic", len(groups)))
+    colors = list(colors or palette("soft_edge", len(groups), "edge"))
+    fills = palette("soft_edge", len(groups), "fill")
+    markers = ["o", "s", "^", "D", "P", "v", "X", "p"]
 
-    for color, (label, sub) in zip(colors, groups):
+    endpoints: list[tuple[float, float, str, str]] = []
+    for idx, (color, (label, sub)) in enumerate(zip(colors, groups)):
         summary = (
             sub.groupby(x, dropna=False)[y]
             .agg(mean="mean", sem=sem, n="count")
@@ -958,14 +1005,43 @@ def line_ci(
         means = summary["mean"].to_numpy(dtype=float)
         errors = summary["sem"].to_numpy(dtype=float) * ci
         label_text = str(label) if group else None
-        ax.plot(xs, means, marker="o", color=color, label=label_text)
-        ax.fill_between(xs, means - errors, means + errors, color=mcolors.to_rgba(color, 0.16), linewidth=0)
+        ax.fill_between(xs, means - errors, means + errors, color=mcolors.to_rgba(fills[idx], 0.52), linewidth=0, zorder=1)
+        ax.plot(
+            xs,
+            means,
+            marker=markers[idx % len(markers)],
+            markersize=5.6,
+            markerfacecolor=fills[idx],
+            markeredgecolor=color,
+            markeredgewidth=0.95,
+            color=color,
+            linewidth=2.0,
+            label=label_text,
+            zorder=3,
+        )
+        if xs.size:
+            endpoints.append((float(xs[-1]), float(means[-1]), str(label), color))
 
     ax.set_xlabel(xlabel or x)
     ax.set_ylabel(ylabel or y)
     if group:
-        ax.legend(loc="best")
-    _finish_axis(ax, grid=True)
+        xmin, xmax = ax.get_xlim()
+        ax.set_xlim(xmin, xmax + (xmax - xmin) * 0.12)
+        for ex, ey, label, color in endpoints:
+            ax.annotate(
+                label,
+                (ex, ey),
+                xytext=(7, 0),
+                textcoords="offset points",
+                ha="left",
+                va="center",
+                fontsize=7.6,
+                color=color,
+                fontweight="bold",
+                clip_on=False,
+            )
+        ax.legend(loc="upper left", frameon=False, ncol=min(len(groups), 3), handlelength=1.6)
+    _paper_panel_axis(ax, grid=True)
     return ax
 
 
@@ -980,21 +1056,35 @@ def scatter_regression(
     ylabel: str | None = None,
 ) -> plt.Axes:
     if ax is None:
-        _, ax = plt.subplots(figsize=(3.2, 2.4), layout="constrained")
+        _, ax = plt.subplots(figsize=(4.0, 2.9), layout="constrained")
     xs = pd.to_numeric(data[x], errors="coerce").to_numpy()
     ys = pd.to_numeric(data[y], errors="coerce").to_numpy()
     mask = np.isfinite(xs) & np.isfinite(ys)
     xs = xs[mask]
     ys = ys[mask]
 
-    ax.scatter(xs, ys, s=45, color=mcolors.to_rgba(color, 0.72), edgecolors="white", linewidths=0.55)
+    fill = blend_with_white(color, 0.56)
+    ax.scatter(xs, ys, s=62, facecolors=fill, edgecolors=color, linewidths=1.05, alpha=0.92, zorder=3)
     if xs.size >= 2:
         slope, intercept = np.polyfit(xs, ys, deg=1)
         line_x = np.linspace(xs.min(), xs.max(), 100)
-        ax.plot(line_x, slope * line_x + intercept, color="#222222", linewidth=1.6)
+        line_y = slope * line_x + intercept
+        ax.plot(line_x, line_y, color="#222222", linewidth=1.5, alpha=0.76, zorder=2)
+        ax.fill_between(line_x, line_y - np.std(ys - (slope * xs + intercept)), line_y + np.std(ys - (slope * xs + intercept)), color="#BDBDBD", alpha=0.13, linewidth=0)
+        best = int(np.nanargmax(ys))
+        ax.scatter([xs[best]], [ys[best]], s=96, facecolors="#FFF7BC", edgecolors="#B64342", linewidths=1.35, zorder=4)
+        ax.annotate(
+            "best",
+            (xs[best], ys[best]),
+            xytext=(6, 5),
+            textcoords="offset points",
+            fontsize=7.5,
+            color="#B64342",
+            fontweight="bold",
+        )
     ax.set_xlabel(xlabel or x)
     ax.set_ylabel(ylabel or y)
-    _finish_axis(ax, grid=True)
+    _paper_panel_axis(ax, grid=True)
     return ax
 
 
@@ -1002,35 +1092,45 @@ def heatmap(
     matrix: np.ndarray | pd.DataFrame,
     *,
     ax: plt.Axes | None = None,
-    cmap: str = "cividis",
+    cmap: str = "YlGnBu",
     colorbar_label: str = "Value",
     row_labels: Sequence[str] | None = None,
     col_labels: Sequence[str] | None = None,
     annotate: bool = False,
 ) -> plt.Axes:
     if ax is None:
-        _, ax = plt.subplots(figsize=(3.2, 2.8), layout="constrained")
+        _, ax = plt.subplots(figsize=(3.7, 3.05), layout="constrained")
     if isinstance(matrix, pd.DataFrame):
         row_labels = list(matrix.index.astype(str)) if row_labels is None else row_labels
         col_labels = list(matrix.columns.astype(str)) if col_labels is None else col_labels
         matrix = matrix.to_numpy()
 
-    im = ax.imshow(matrix, cmap=cmap, aspect="auto")
+    arr = np.asarray(matrix, dtype=float)
+    im = ax.imshow(arr, cmap=cmap, aspect="auto")
     if row_labels is not None:
         ax.set_yticks(np.arange(len(row_labels)), row_labels)
     if col_labels is not None:
         ax.set_xticks(np.arange(len(col_labels)), col_labels, rotation=35, ha="right")
-    if annotate:
-        arr = np.asarray(matrix, dtype=float)
-        threshold = np.nanmean(arr)
+    should_annotate = annotate or arr.size <= 64
+    if should_annotate:
+        cmap_obj = plt.get_cmap(cmap)
+        norm = mcolors.Normalize(vmin=float(np.nanmin(arr)), vmax=float(np.nanmax(arr)))
         for i in range(arr.shape[0]):
             for j in range(arr.shape[1]):
                 val = arr[i, j]
-                color = "white" if val < threshold else "black"
-                ax.text(j, i, f"{val:.2f}", ha="center", va="center", fontsize=8, color=color)
-    cbar = ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
+                rgb = np.asarray(cmap_obj(norm(val))[:3])
+                luminance = float(np.dot(rgb, [0.2126, 0.7152, 0.0722]))
+                color = "white" if luminance < 0.48 else "#202020"
+                ax.text(j, i, f"{val:.2f}", ha="center", va="center", fontsize=7.3, color=color)
+    ax.set_xticks(np.arange(arr.shape[1] + 1) - 0.5, minor=True)
+    ax.set_yticks(np.arange(arr.shape[0] + 1) - 0.5, minor=True)
+    ax.grid(which="minor", color="white", linewidth=1.05)
+    ax.tick_params(which="minor", bottom=False, left=False)
+    cbar = ax.figure.colorbar(im, ax=ax, fraction=0.044, pad=0.025)
     cbar.set_label(colorbar_label)
     ax.tick_params(length=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     return ax
 
 
@@ -1082,7 +1182,8 @@ def radial_ridge_plot(
     arr = np.nan_to_num(arr, nan=0.0)
     max_val = max(float(np.nanmax(arr)), 1e-9)
     norm = arr / max_val
-    colors = list(colors or [AI_SEMANTIC["green_3"], AI_SEMANTIC["blue_secondary"], "#071D2B"])
+    colors = list(colors or palette("soft_edge", arr.shape[0], "edge"))
+    fills = palette("soft_edge", arr.shape[0], "fill")
     n = len(categories)
     theta = np.linspace(0, 2 * np.pi, n, endpoint=False)
     theta_closed = np.r_[theta, theta[0]]
@@ -1095,16 +1196,17 @@ def radial_ridge_plot(
         smooth = (np.roll(smooth, 1) + 2 * smooth + np.roll(smooth, -1)) / 4
         ridge = base + ridge_height * np.r_[smooth, smooth[0]]
         base_line = np.full_like(theta_closed, base)
-        ax.fill_between(theta_closed, base_line, ridge, color=mcolors.to_rgba(colors[idx], 0.82), linewidth=0)
-        ax.plot(theta_closed, ridge, color=colors[idx], linewidth=1.6, label=label)
-        for t, r, val in zip(theta, ridge[:-1], arr[idx]):
-            ax.text(t, r + 0.025, f"{val:.1f}", fontsize=7, ha="center", va="center", rotation=np.degrees(t) - 90)
+        ax.fill_between(theta_closed, base_line, ridge, color=mcolors.to_rgba(fills[idx], 0.72), linewidth=0)
+        ax.plot(theta_closed, ridge, color=colors[idx], linewidth=1.75, label=label)
+        peak = int(np.nanargmax(arr[idx]))
+        ax.scatter([theta[peak]], [ridge[:-1][peak]], s=18, color=colors[idx], edgecolor="white", linewidth=0.55, zorder=4)
+        ax.text(theta[peak], ridge[:-1][peak] + 0.04, f"{arr[idx][peak]:.1f}", fontsize=6.8, ha="center", va="center", color=colors[idx])
 
     ax.set_xticks(theta, categories)
     ax.set_yticks([])
     ax.spines["polar"].set_visible(False)
-    ax.grid(color="#CFCFCF", linestyle="--", linewidth=0.8)
-    ax.legend(loc="center left", bbox_to_anchor=(1.07, 0.62))
+    ax.grid(color="#D6D6D6", linestyle="--", linewidth=0.7)
+    ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.62), frameon=False, fontsize=8)
 
 
 def sensitivity3d_plot(
@@ -1450,10 +1552,12 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
         plt.close(fig)
         style = setup_theme(style_name)
 
-    if kind in {"rl-bars", "all"}:
+    if kind in {"bars", "rl-bars", "all"}:
         setup_theme("rl_benchmark")
         fig = rl_benchmark_grid(_demo_rl_panels(), methods_for_legend=RL_METHOD_ORDER, include_legend=True)
-        made.extend(save_figure(fig, out / "demo_rl_benchmark_bars", formats=formats, dpi=max(dpi, 600)))
+        made.extend(save_figure(fig, out / "demo_bar_charts", formats=formats, dpi=max(dpi, 600)))
+        if kind == "rl-bars":
+            made.extend(save_figure(fig, out / "demo_rl_benchmark_bars", formats=formats, dpi=max(dpi, 600)))
         plt.close(fig)
         style = setup_theme(style_name)
 
@@ -1609,7 +1713,9 @@ def plot_from_table(
     data = read_table(data_path)
     out = Path(out_dir)
     stem = output_name or f"{Path(data_path).stem}_{kind.replace('-', '_')}"
-    colors = palette(palette_name, 24, "fill" if palette_name == "rl_pastel" else "edge")
+    soft_default_kinds = {"violin", "line", "scatter", "radar", "radial-ridge", "pareto-scatter", "metric-suite"}
+    effective_palette = "soft_edge" if palette_name == "rl_pastel" and kind in soft_default_kinds else palette_name
+    colors = palette(effective_palette, 24, "fill" if effective_palette == "rl_pastel" else "edge")
 
     if kind == "bar":
         if not group or not value:
@@ -1824,6 +1930,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--demo",
         choices=[
             "all",
+            "bars",
             "bar",
             "violin",
             "line",

@@ -1,8 +1,8 @@
 # Design Notes
 
-## RL Benchmark Default
+## Bar Chart Default
 
-Use `--style rl_benchmark --palette rl_pastel` for RL, control, robotics, benchmark, method-comparison, and sample-efficiency figures. This style favors:
+Use `--demo bars` or the `rl_benchmark` implementation for default bar charts, benchmark grids, method comparisons, and sample-efficiency figures. Call the output a bar chart unless the user's domain is explicitly RL/control/robotics. This style favors:
 
 - light gray plot panels on a white page,
 - pastel bar fills with saturated same-hue outlines,
@@ -12,8 +12,12 @@ Use `--style rl_benchmark --palette rl_pastel` for RL, control, robotics, benchm
 - horizontal bars for parameters, FPS, latency, cost, or memory,
 - one bottom shared legend with square color swatches for bar grids.
 
-Use `--demo rl-bars` to inspect the default benchmark bar aesthetic.
+Use `--demo bars` to inspect the default bar aesthetic; `--demo rl-bars` remains as a compatibility alias.
 Keep title and subtitle as two distinct lines; if a vertical bar is too short, move its method label outside the bar rather than letting it collide with the error cap.
+
+## Screenshot Soft-Edge Palette
+
+Use `soft_edge` for most non-heatmap categorical figures when the user wants the screenshot-inspired look: light fills, saturated outlines, white raw points, and readable direct labels. Sample across hue families for multi-group plots instead of using several neighboring shades of one color.
 
 ## AI-Conference Alternative
 

@@ -2,11 +2,12 @@
 
 Publication-ready scientific plotting helpers for Codex skills and Python workflows.
 
-This skill focuses on academic figures for papers, theses, lab reports, posters, and presentations. It includes a reusable Matplotlib helper script for RL/AI benchmark bars, grouped comparisons, bar + raw points + SEM, box/violin + points, line + CI, heatmaps, scatter/regression, radar plots, radial ridge plots, 3D sensitivity plots, and top-paper-inspired qualitative/ablation/uncertainty layouts.
+This skill focuses on academic figures for papers, theses, lab reports, posters, and presentations. It includes a reusable Matplotlib helper script for polished bar charts, grouped comparisons, bar + raw points + SEM, box/violin + points, line + CI, heatmaps, scatter/regression, radar plots, radial ridge plots, 3D sensitivity plots, and top-paper-inspired qualitative/ablation/uncertainty layouts.
 
 ## Highlights
 
-- RL benchmark bar style with light gray panels, pastel fills, saturated edges, error bars, safe method labels, horizontal resource bars, and square color-swatch legends.
+- Default bar-chart style with light gray panels, pastel fills, saturated edges, error bars, safe method labels, horizontal resource bars, and square color-swatch legends.
+- Screenshot-inspired `soft_edge` palette for light fills plus saturated outlines across distribution, line, scatter, and multi-panel figures.
 - Top-conference style families: `cvpr_qualitative`, `eccv_lowlevel`, `icml_dense`, and `aaai_geo`.
 - Layered modules under `scripts/paperplots/` for style registries, palettes, plotters, and demo data.
 - Publication-oriented defaults for typography, layout, vector-first export, and nonblank output checks.
@@ -18,7 +19,7 @@ This skill focuses on academic figures for papers, theses, lab reports, posters,
 Render demo figures:
 
 ```bash
-python scripts/paper_plot.py --demo rl-bars --out paper_plot_demo
+python scripts/paper_plot.py --demo bars --out paper_plot_demo
 python scripts/paper_plot.py --demo qual-grid --out paper_plot_demo
 python scripts/paper_plot.py --demo metric-suite --out paper_plot_demo
 python scripts/paper_plot.py --demo ablation-matrix --out paper_plot_demo
@@ -27,7 +28,7 @@ python scripts/paper_plot.py --demo uncertainty-map --out paper_plot_demo
 python scripts/paper_plot.py --demo all --out paper_plot_demo
 ```
 
-Render an RL benchmark grid from a table:
+Render a benchmark-style bar grid from a table:
 
 ```bash
 python scripts/paper_plot.py \

@@ -1,6 +1,6 @@
 """Layered plotting helpers for the paper-python-plots skill."""
 
-from .styles import TOP_PAPER_PALETTES, TOP_PAPER_STYLE_NOTES
+from .styles import SOFT_EDGE_EDGES, SOFT_EDGE_FILLS, SOFT_EDGE_PALETTES, TOP_PAPER_PALETTES, TOP_PAPER_STYLE_NOTES
 from .top_paper_plots import (
     ablation_matrix_plot,
     demo_ablation_matrix,
@@ -17,6 +17,9 @@ from .top_paper_plots import (
 __all__ = [
     "TOP_PAPER_PALETTES",
     "TOP_PAPER_STYLE_NOTES",
+    "SOFT_EDGE_PALETTES",
+    "SOFT_EDGE_FILLS",
+    "SOFT_EDGE_EDGES",
     "ablation_matrix_plot",
     "demo_ablation_matrix",
     "demo_metric_suite",

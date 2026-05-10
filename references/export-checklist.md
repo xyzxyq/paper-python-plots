@@ -18,12 +18,14 @@ Run this before delivering final scientific figures.
 - Color meanings are consistent across panels.
 - Proposed/key methods use the same semantic color across related figures.
 - Dense benchmark bars have enough edge contrast and, when needed, hatch separation for grayscale print.
+- Default bar-chart outputs should not be labeled as RL-specific unless the user's domain is RL/control/robotics.
 - Direct value labels are legible and do not collide with bar tops or panel titles.
-- RL benchmark panels have clear title/subtitle spacing, readable vertical method labels, and short-bar labels that do not collide with error caps.
-- RL benchmark bar legends use square fill/edge swatches; marker symbols are reserved for line/curve plots.
+- Benchmark-style bar panels have clear title/subtitle spacing, readable vertical method labels, and short-bar labels that do not collide with error caps.
+- Bar-chart legends use square fill/edge swatches; marker symbols are reserved for line/curve plots.
 - Horizontal resource bars show both method names and gray value suffixes without clipping.
 - Heatmap colorbar has label and meaningful limits.
 - Qualitative grids have readable row/column labels and do not distort images by accidental aspect changes.
+- Distribution, line, and scatter figures using `soft_edge` should have varied hue families, not several adjacent near-identical blues.
 - Pareto and dense benchmark direct labels do not collide; label only highlighted methods when the panel is crowded.
 - Map/uncertainty panels include calibrated colorbar labels and use colormaps that match the encoded quantity.
 - Polar or 3D views are justified by the data structure; otherwise use a clearer 2D alternative.

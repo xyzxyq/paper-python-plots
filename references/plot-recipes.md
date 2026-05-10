@@ -4,8 +4,8 @@ Use these compact recipes to pick a figure form before writing code.
 
 ## Group Comparisons
 
-**RL benchmark bar grid**
-- Use first for RL/AI task comparison figures.
+**Bar chart / benchmark bar grid**
+- Use first for task comparison and benchmark figures; call it a bar chart unless the domain is explicitly RL/control.
 - Put reward/task performance panels on the top row and resource/cost/FPS panels on the bottom row.
 - Use light gray axes background, pastel fills, saturated outlines, thin error bars, and vertical in-bar method labels.
 - Use horizontal bars for parameter count, FPS, memory, latency, and cost.
@@ -37,7 +37,7 @@ Use these compact recipes to pick a figure form before writing code.
 
 **Box/violin + raw points**
 - Use when distributions, skew, outliers, or sample size matter.
-- Overlay points with partial transparency.
+- Use screenshot-inspired `soft_edge` fills and outlines, overlay white raw points with saturated edges, and mark the mean with a small diamond.
 - Use violin only when sample size is large enough for a meaningful density estimate.
 
 **Raincloud**
@@ -49,13 +49,14 @@ Use these compact recipes to pick a figure form before writing code.
 
 **Line + SEM/CI ribbon**
 - Use for time courses, dose response, training curves, ablations, and repeated x-values.
-- Show observed x positions with markers.
-- Use consistent colors per group and light ribbons.
+- Show observed x positions with markers, saturated lines, light ribbons, and direct end labels.
+- Use `soft_edge` for categorical series unless a domain palette is required.
 - Avoid smoothing unless the model is part of the claim.
 
 **Scatter + model line**
 - Use for relationships between two continuous variables.
-- Plot raw points first; fit a line only when linearity is reasonable.
+- Plot raw points first with light fills and saturated outlines; fit a line only when linearity is reasonable.
+- Highlight the best or key point only when the figure is a method comparison or tradeoff.
 - Include sample size and statistic in caption or annotation, not as oversized title text.
 
 ## Matrices
@@ -64,6 +65,7 @@ Use these compact recipes to pick a figure form before writing code.
 - Use for correlation, confusion, enrichment, distance, expression, or score matrices.
 - Use sequential colormaps for magnitude, diverging colormaps for signed values centered at a meaningful zero.
 - Always include a colorbar label with units or score definition.
+- Annotate compact matrices and choose white/black cell text by actual color luminance.
 - Rotate tick labels only as much as needed; abbreviate long names.
 
 **Ablation matrix**

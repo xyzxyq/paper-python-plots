@@ -15,6 +15,7 @@ The helper script exposes:
 - `rl_pastel`: RL/AI benchmark palette with pastel fills, saturated outlines, and optional marker shapes for line plots.
 - `ai_semantic`: figures4papers-inspired AI-paper palette with explicit semantic roles.
 - `screenshot`: soft fill/dark edge pairs inspired by the user's screenshots.
+- `soft_edge`: expanded screenshot-inspired categorical palette; for groups it samples across hue families while keeping light fills plus saturated outlines.
 - `okabe_ito`: colorblind-aware categorical palette.
 - `journal_muted`: restrained paper-style colors for multi-series plots.
 - `nature_soft`: subdued fill colors with darker outlines.
@@ -92,6 +93,8 @@ SCREENSHOT_PALETTES = [
     {"fill": ["#f0f0f0", "#d9d9d9", "#bdbdbd", "#969696"], "edge": ["#bdbdbd", "#969696", "#737373", "#525252"]},
 ]
 ```
+
+Use `soft_edge` as the preferred non-heatmap categorical palette for polished distribution plots, line+CI plots, scatter/Pareto plots, and mixed multi-panel figures. It intentionally picks representative colors across the screenshot palette rows instead of taking four adjacent blues first.
 
 ## Top-Paper Style Families
 
