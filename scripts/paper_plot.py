@@ -531,7 +531,7 @@ def violin_box_points(
     ylabel: str | None = None,
     seed: int = 11,
 ) -> plt.Axes:
-    """Draw polished distribution panels with density, summary, and raw points."""
+    """Draw a compact horizontal raincloud distribution panel."""
 
     if ax is None:
         _, ax = plt.subplots(figsize=(4.0, 2.85), layout="constrained")
@@ -543,72 +543,78 @@ def violin_box_points(
         pd.to_numeric(data.loc[data[group] == label, value], errors="coerce").dropna().to_numpy()
         for label in order
     ]
-    positions = np.arange(len(order))
+    positions = np.arange(len(order))[::-1]
 
-    parts = ax.violinplot(values, positions=positions, widths=0.72, showmeans=False, showextrema=False, showmedians=False)
+    parts = ax.violinplot(values, positions=positions, widths=0.74, vert=False, showmeans=False, showextrema=False, showmedians=False)
     for pos, body, fill_color, edge_color in zip(positions, parts["bodies"], fill_colors, edge_colors):
         for path in body.get_paths():
             vertices = path.vertices
-            vertices[:, 0] = np.minimum(vertices[:, 0], pos - 0.03)
+            vertices[:, 1] = np.maximum(vertices[:, 1], pos + 0.045)
         body.set_facecolor(mcolors.to_rgba(fill_color, 0.66))
         body.set_edgecolor(edge_color)
-        body.set_linewidth(1.15)
+        body.set_linewidth(1.1)
         body.set_zorder(2)
 
     ax.boxplot(
         values,
-        positions=positions + 0.10,
-        widths=0.18,
+        vert=False,
+        positions=positions - 0.01,
+        widths=0.17,
         patch_artist=True,
         showfliers=False,
         medianprops={"color": "#1F2937", "linewidth": 1.35},
-        boxprops={"facecolor": "white", "edgecolor": "#2F2F2F", "linewidth": 1.05},
-        whiskerprops={"color": "#2F2F2F", "linewidth": 1.0},
-        capprops={"color": "#2F2F2F", "linewidth": 1.0},
+        boxprops={"facecolor": mcolors.to_rgba("white", 0.88), "edgecolor": "#2F2F2F", "linewidth": 0.95},
+        whiskerprops={"color": "#2F2F2F", "linewidth": 0.9},
+        capprops={"color": "#2F2F2F", "linewidth": 0.9},
     )
-    for i, vals in enumerate(values):
+    for i, (pos, vals) in enumerate(zip(positions, values)):
         jitter = rng.normal(0, 0.035, size=vals.size)
         ax.scatter(
-            np.full(vals.size, i + 0.24) + jitter,
             vals,
-            s=23,
+            np.full(vals.size, pos - 0.25) + jitter,
+            s=20,
             facecolors="white",
             edgecolors=edge_colors[i],
-            linewidths=0.82,
+            linewidths=0.74,
             alpha=0.95,
             zorder=4,
         )
         if vals.size:
             mean_val = float(np.mean(vals))
-            median_val = float(np.median(vals))
             ax.scatter(
-                [i + 0.10],
                 [mean_val],
+                [pos - 0.01],
                 marker="D",
-                s=32,
+                s=27,
                 facecolors=fill_colors[i],
                 edgecolors="#111111",
-                linewidths=0.82,
+                linewidths=0.78,
                 zorder=5,
             )
-            ax.plot([i + 0.18, i + 0.32], [median_val, median_val], color=edge_colors[i], linewidth=1.55, zorder=5)
-            ax.text(
-                i,
-                float(np.nanmax(vals)) + max(float(np.nanstd(vals)), 0.08) * 0.18,
-                f"n={vals.size}",
-                ha="center",
-                va="bottom",
-                fontsize=7.0,
-                color="#6B7280",
-            )
 
-    ax.set_xticks(positions, order)
-    ax.set_ylabel(ylabel or value)
-    ax.set_xlim(-0.62, len(order) - 0.28)
+    ax.set_yticks(positions, order)
+    ax.set_xlabel(ylabel or value)
+    ax.set_ylabel("")
     finite_values = [v for v in values if v.size]
     if finite_values:
-        ax.set_ylim(dynamic_ylim(np.concatenate(finite_values), pad_fraction=0.16))
-    _paper_panel_axis(ax, grid=True)
+        xlim = dynamic_ylim(np.concatenate(finite_values), pad_fraction=0.10)
+        ax.set_xlim(xlim)
+        span = xlim[1] - xlim[0]
+        for pos, vals in zip(positions, values):
+            if vals.size:
+                ax.text(
+                    xlim[1] - span * 0.018,
+                    pos + 0.24,
+                    f"n={vals.size}",
+                    ha="right",
+                    va="center",
+                    fontsize=6.8,
+                    color="#6B7280",
+                )
+    ax.set_ylim(float(np.min(positions)) - 0.58, float(np.max(positions)) + 0.58)
+    _paper_panel_axis(ax, grid=False, face="#FBFBFA")
+    ax.grid(axis="x", color="#E5E5E5", linewidth=0.72, zorder=0)
+    ax.grid(axis="y", visible=False)
     return ax
 
 
@@ -1656,7 +1662,7 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
         setup_theme("compact")
         fig, ax = plt.subplots(figsize=(4.55, 3.05), layout="constrained")
         violin_box_points(_demo_distribution(), "group", "response", ax=ax, ylabel="Normalized response")
-        ax.set_title("Distribution: density, box, samples", pad=8)
+        ax.set_title("Raincloud distribution", fontsize=10.8, fontweight="bold", pad=7)
         made.extend(save_figure(fig, out / "demo_violin_box_points", formats=formats, dpi=dpi))
         plt.close(fig)
         style = setup_theme(style_name)
