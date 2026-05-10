@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Python Plots"
+  short_description: "Create publication-ready scientific plots with Python."
+  default_prompt: "Use $paper-python-plots to turn my dataset into a publication-ready Python figure."
