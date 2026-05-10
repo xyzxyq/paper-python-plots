@@ -7,5 +7,9 @@ __pycache__/
 .ruff_cache/
 
 paper_plot_demo/
+paper_plot_demo*/
 figures/
+research_cache/
+top_paper_figures/
+*.pdf.tmp
 *.tmp

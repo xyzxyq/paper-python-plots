@@ -23,6 +23,9 @@ Run this before delivering final scientific figures.
 - RL benchmark bar legends use square fill/edge swatches; marker symbols are reserved for line/curve plots.
 - Horizontal resource bars show both method names and gray value suffixes without clipping.
 - Heatmap colorbar has label and meaningful limits.
+- Qualitative grids have readable row/column labels and do not distort images by accidental aspect changes.
+- Pareto and dense benchmark direct labels do not collide; label only highlighted methods when the panel is crowded.
+- Map/uncertainty panels include calibrated colorbar labels and use colormaps that match the encoded quantity.
 - Polar or 3D views are justified by the data structure; otherwise use a clearer 2D alternative.
 
 ## Statistics

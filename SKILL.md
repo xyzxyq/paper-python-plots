@@ -23,6 +23,10 @@ Use this skill when numeric truth matters and the final output should look like 
 ## Plot Choices
 
 - **RL/AI benchmark bars**: use `rl_benchmark` and `rl_pastel` first. Prefer multi-panel task grids, vertical labels inside method bars, safe outside labels for very short bars, horizontal bars for parameters/FPS/cost, and bottom shared legends with square color swatches.
+- **CVPR qualitative results**: use `cvpr_qualitative` with `qual-grid` for image/result grids, method columns, compact row labels, and thin separators. Do not copy paper figures; use the style grammar on the user's own data/images.
+- **ECCV low-level vision**: use `eccv_lowlevel` for restoration, flow, spectral, or dense visual-comparison panels where metric callouts sit near qualitative rows.
+- **ICML dense results**: use `icml_dense` for ablation matrices, metric suites, compact benchmark curves, pareto tradeoffs, and multi-metric dashboards.
+- **AAAI geospatial/social-impact results**: use `aaai_geo` for map-like heatmaps, uncertainty maps, calibrated colorbars, regional comparisons, and satellite/remote-sensing result panels.
 - **AI benchmark comparisons**: use `ai_conference` only when the user wants a stronger modern bar-chart look rather than the lighter RL-paper style.
 - **Mean comparisons**: use bar+raw points+SEM only when the mean is the claim; otherwise use box/violin/raincloud plus raw points.
 - **Distributions**: show individual samples with jitter/swarm; add medians/quartiles or density, not only bars.
@@ -43,13 +47,19 @@ Use this skill when numeric truth matters and the final output should look like 
 ## Bundled Resources
 
 - `scripts/paper_plot.py`
-  Import for helpers or run `python scripts/paper_plot.py --demo rl-bars --out <folder>` to preview the default benchmark bar style. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.xlsx --kind rl-benchmark-grid --panel Panel --group Method --value Score --subtitle Subtitle --orientation Orientation --error Error --display-value Display --out figures`.
+  Compatibility CLI and import surface. Run `python scripts/paper_plot.py --demo rl-bars --out <folder>` for the default benchmark bar style or `--demo qual-grid|metric-suite|ablation-matrix|pareto-scatter|uncertainty-map` for top-paper-inspired styles. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.xlsx --kind rl-benchmark-grid --panel Panel --group Method --value Score --subtitle Subtitle --orientation Orientation --error Error --display-value Display --out figures`.
+- `scripts/paperplots/`
+  Layered implementation modules for style registries, palettes, top-paper plotters, and demo data. Prefer adding new families here rather than expanding the CLI file.
+- `scripts/collect_top_paper_figures.py`
+  Local-only research collector for downloading public PDFs and rendering/cropping candidate result figures into `research_cache/top_paper_figures/`. The cache is ignored by git and must not be published.
 - `references/plot-recipes.md`
   Load when choosing or implementing a figure type.
 - `references/palettes.md`
   Load when selecting colors, translating screenshot-inspired palettes, or checking accessibility.
 - `references/design-notes.md`
   Load when polishing style, sizing, legend placement, or deciding whether 3D/polar views are justified.
+- `references/top-paper-style-corpus.md`
+  Load when deciding which top-paper-inspired style family to imitate and what local reference cache was used.
 - `references/export-checklist.md`
   Load before final delivery or when journal/publisher constraints matter.
 
@@ -57,6 +67,7 @@ Use this skill when numeric truth matters and the final output should look like 
 
 - Use Matplotlib as the base renderer. Use Seaborn, SciencePlots, statannotations, PtitPrince, CMasher, Colorcet, SciPy, statsmodels, or scikit-posthocs only when installed or when the user approves adding dependencies.
 - Use `rl_benchmark` style for benchmark/bar figures by default; use `ai_conference` for more forceful modern comparison charts; use `compact`, `nature_minimal`, or `bio_stats` only when the user asks or the figure type calls for it.
+- Use `cvpr_qualitative`, `eccv_lowlevel`, `icml_dense`, or `aaai_geo` when the user references top-conference result figures, image comparison grids, dense ablations, pareto tradeoffs, or uncertainty/map-like outputs.
 - For RL/AI benchmark grids, pair `--style rl_benchmark` with `--palette rl_pastel`.
 - For RL/AI bar grids, use square fill/edge legend swatches. Reserve marker shapes for line/curve plots that actually draw markers.
 - Use semantic colors: blue for proposed/key method, green for gains/improvements, red/pink for baselines or contrasts, neutral gray for references/background, gold for a single highlight.

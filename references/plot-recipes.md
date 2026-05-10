@@ -66,6 +66,33 @@ Use these compact recipes to pick a figure form before writing code.
 - Always include a colorbar label with units or score definition.
 - Rotate tick labels only as much as needed; abbreviate long names.
 
+**Ablation matrix**
+- Use for dense component/configuration results, especially ICML-style ablations.
+- Put configurations on rows and metrics/tasks on columns.
+- Annotate cell values when the matrix is small enough; otherwise reserve text for row/column labels and highlight extrema.
+
+**Uncertainty map**
+- Use for map-like, geospatial, calibration, or uncertainty panels.
+- Always include a calibrated colorbar label and avoid rainbow maps unless the domain convention requires them.
+- Pair maps with direct region labels only when they do not obscure the encoded values.
+
+## Top-Paper Result Panels
+
+**Qualitative result grid**
+- Use for CVPR/ECCV-style image/result panels.
+- Arrange rows as examples/tasks and columns as input, baselines, and proposed method.
+- Use compact method labels, thin separators, stable aspect ratios, and minimal axes.
+- Keep paper reference images local-only; apply the layout to the user's own images.
+
+**Metric suite dashboard**
+- Use for multi-metric benchmark summaries such as accuracy, robustness, speed, cost, or latency.
+- Give each metric a compact panel with shared method order and direct values.
+- Use this for summarized results, not raw distributions.
+
+**Pareto scatter**
+- Use for accuracy/cost/latency/model-size tradeoffs.
+- Label points directly when there are fewer than roughly 12 methods; otherwise label the highlighted method and frontier.
+
 ## Profile And Advanced Views
 
 **Radar comparison**

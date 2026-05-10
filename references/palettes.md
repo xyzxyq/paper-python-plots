@@ -93,6 +93,20 @@ SCREENSHOT_PALETTES = [
 ]
 ```
 
+## Top-Paper Style Families
+
+These palettes are intentionally compact role palettes, not copies from any specific paper.
+
+- `cvpr_qualitative`: saturated blue/orange/green/purple/pink/teal/gray for method columns and qualitative result labels.
+- `eccv_lowlevel`: deep blue to light cyan plus orange/green/violet accents for restoration, flow, spectral, and image comparison panels.
+- `icml_dense`: muted green/olive/orange/blue/violet for dense benchmark curves, ablation matrices, and metric suites.
+- `aaai_geo`: teal/seafoam/sand/orange/red for geospatial maps, uncertainty panels, and social-impact result figures.
+
+Rules:
+- For qualitative grids, reserve strong colors for method labels, dividers, callout boxes, or metric badges; do not tint the images themselves unless the data encoding requires it.
+- For ablation matrices and uncertainty maps, use sequential colormaps for magnitude and add explicit colorbar labels.
+- For pareto plots, use direct labels and one highlighted method instead of a crowded legend.
+
 ## Continuous Colormaps
 
 - Matplotlib defaults worth using: `viridis`, `cividis`, `magma`, `inferno`, `plasma`.

@@ -27,6 +27,20 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 import pandas as pd
 
+from paperplots import (
+    TOP_PAPER_PALETTES,
+    ablation_matrix_plot,
+    demo_ablation_matrix,
+    demo_metric_suite,
+    demo_pareto_scatter,
+    demo_qual_grid,
+    demo_uncertainty_map,
+    metric_suite_dashboard,
+    pareto_scatter_plot,
+    qualitative_result_grid,
+    uncertainty_map_plot,
+)
+
 
 @dataclass(frozen=True)
 class FigureStyle:
@@ -50,6 +64,10 @@ STYLE_PRESETS = {
     "ai_conference": FigureStyle("ai_conference", 11.5, 1.35, 1.15, 4.2, 1.9, 5.0, 1.25, False),
     "nature_minimal": FigureStyle("nature_minimal", 9.0, 0.9, 0.8, 3.5, 1.5, 4.0, 0.9, False),
     "bio_stats": FigureStyle("bio_stats", 10.0, 1.1, 0.9, 3.8, 1.7, 4.5, 1.0, True),
+    "cvpr_qualitative": FigureStyle("cvpr_qualitative", 9.4, 0.8, 0.7, 2.8, 1.4, 4.0, 0.8, False),
+    "eccv_lowlevel": FigureStyle("eccv_lowlevel", 9.2, 0.9, 0.75, 3.0, 1.5, 4.0, 0.85, True),
+    "icml_dense": FigureStyle("icml_dense", 8.8, 0.95, 0.8, 3.0, 1.45, 4.2, 0.85, True),
+    "aaai_geo": FigureStyle("aaai_geo", 9.4, 0.9, 0.8, 3.2, 1.55, 4.2, 0.9, True),
 }
 
 
@@ -162,6 +180,7 @@ PALETTES = {
     "okabe_ito": OKABE_ITO,
     "journal_muted": JOURNAL_MUTED,
     "nature_soft": NATURE_SOFT,
+    **TOP_PAPER_PALETTES,
 }
 
 HATCHES = ["", "//", "\\\\", "..", "xx", "--", "++", "oo"]
@@ -1480,6 +1499,41 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
         made.extend(save_figure(fig, out / "demo_sensitivity3d", formats=formats, dpi=dpi))
         plt.close(fig)
 
+    if kind in {"qual-grid", "all"}:
+        setup_theme("cvpr_qualitative")
+        fig = demo_qual_grid()
+        made.extend(save_figure(fig, out / "demo_qual_grid", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
+    if kind in {"metric-suite", "all"}:
+        setup_theme("icml_dense")
+        fig = demo_metric_suite()
+        made.extend(save_figure(fig, out / "demo_metric_suite", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
+    if kind in {"ablation-matrix", "all"}:
+        setup_theme("icml_dense")
+        fig = demo_ablation_matrix()
+        made.extend(save_figure(fig, out / "demo_ablation_matrix", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
+    if kind in {"pareto-scatter", "all"}:
+        setup_theme("icml_dense")
+        fig = demo_pareto_scatter()
+        made.extend(save_figure(fig, out / "demo_pareto_scatter", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
+    if kind in {"uncertainty-map", "all"}:
+        setup_theme("aaai_geo")
+        fig = demo_uncertainty_map()
+        made.extend(save_figure(fig, out / "demo_uncertainty_map", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
     return made
 
 
@@ -1673,10 +1727,84 @@ def plot_from_table(
         methods_for_legend = [method for method in RL_METHOD_ORDER if method in set(data[group].astype(str))]
         remaining = [method for method in pd.unique(data[group].astype(str)) if method not in methods_for_legend]
         fig = rl_benchmark_grid(panels, methods_for_legend=methods_for_legend + remaining, include_legend=True)
+    elif kind == "qual-grid":
+        if not x or not series:
+            raise ValueError("--kind qual-grid requires --x image-path column and --series method column; optionally pass --panel row column.")
+        row_col = panel or group
+        row_labels = list(pd.unique(data[row_col].astype(str))) if row_col else ["Sample"]
+        col_labels = list(pd.unique(data[series].astype(str)))
+        images: list[list[np.ndarray]] = []
+        for row_label in row_labels:
+            row_images: list[np.ndarray] = []
+            row_data = data[data[row_col].astype(str) == row_label] if row_col else data
+            for col_label in col_labels:
+                match = row_data[row_data[series].astype(str) == col_label]
+                if match.empty:
+                    row_images.append(np.ones((96, 128, 3), dtype=float))
+                    continue
+                image_path = Path(str(match.iloc[0][x])).expanduser()
+                if not image_path.is_absolute():
+                    image_path = Path(data_path).parent / image_path
+                row_images.append(mpimg.imread(image_path))
+            images.append(row_images)
+        fig = qualitative_result_grid(images, row_labels, col_labels, title=stem.replace("_", " "), style_name=style_name)
+    elif kind == "metric-suite":
+        if not x or not group or not value:
+            raise ValueError("--kind metric-suite requires --x metric column, --group method column, and --value.")
+        pivot = data.pivot_table(index=group, columns=x, values=value, aggfunc="mean")
+        fig = metric_suite_dashboard(
+            list(pivot.columns.astype(str)),
+            list(pivot.index.astype(str)),
+            pivot.to_numpy(dtype=float),
+            title=stem.replace("_", " "),
+            style_name=style_name,
+        )
+    elif kind == "ablation-matrix":
+        if not x or not series or not value:
+            raise ValueError("--kind ablation-matrix requires --x, --series, and --value.")
+        pivot = data.pivot_table(index=series, columns=x, values=value, aggfunc="mean")
+        fig, ax = plt.subplots(figsize=(6.2, 3.8), layout="constrained")
+        ablation_matrix_plot(
+            ax,
+            pivot.to_numpy(dtype=float),
+            list(pivot.index.astype(str)),
+            list(pivot.columns.astype(str)),
+            title=stem.replace("_", " "),
+            style_name=style_name,
+        )
+    elif kind == "pareto-scatter":
+        if not x or not y:
+            raise ValueError("--kind pareto-scatter requires --x and --y.")
+        label_col = group or series
+        labels = data[label_col].astype(str).tolist() if label_col else [str(i + 1) for i in range(len(data))]
+        sizes = pd.to_numeric(data[value], errors="coerce").to_numpy(dtype=float) if value else None
+        fig, ax = plt.subplots(figsize=(5.8, 4.1), layout="constrained")
+        pareto_scatter_plot(
+            ax,
+            pd.to_numeric(data[x], errors="coerce").to_numpy(dtype=float),
+            pd.to_numeric(data[y], errors="coerce").to_numpy(dtype=float),
+            labels,
+            size=sizes,
+            xlabel=x,
+            ylabel=y,
+            title=stem.replace("_", " "),
+            style_name=style_name,
+        )
+    elif kind == "uncertainty-map":
+        if x and y and value:
+            pivot = data.pivot_table(index=y, columns=x, values=value, aggfunc="mean")
+            matrix = pivot.to_numpy(dtype=float)
+        else:
+            numeric = data.select_dtypes(include=[np.number])
+            if numeric.empty:
+                raise ValueError("--kind uncertainty-map requires numeric columns or --x/--y/--value.")
+            matrix = numeric.to_numpy(dtype=float)
+        fig, ax = plt.subplots(figsize=(5.2, 4.1), layout="constrained")
+        uncertainty_map_plot(ax, matrix, title=stem.replace("_", " "), style_name=style_name)
     else:
         raise ValueError(f"Unsupported table plot kind: {kind}")
 
-    if "ax" in locals() and kind not in {"sensitivity3d"}:
+    if "ax" in locals() and kind not in {"sensitivity3d", "ablation-matrix", "pareto-scatter", "uncertainty-map"}:
         ax.set_title(stem.replace("_", " "))
     paths = save_figure(fig, out / stem, formats=formats, dpi=dpi)
     plt.close(fig)
@@ -1706,6 +1834,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             "ai-bars",
             "radial-ridge",
             "sensitivity3d",
+            "qual-grid",
+            "metric-suite",
+            "ablation-matrix",
+            "pareto-scatter",
+            "uncertainty-map",
         ],
         default="all",
         help="Demo figure type to render.",
@@ -1732,6 +1865,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             "radial-ridge",
             "sensitivity3d",
             "rl-benchmark-grid",
+            "qual-grid",
+            "metric-suite",
+            "ablation-matrix",
+            "pareto-scatter",
+            "uncertainty-map",
         ],
         help="Plot kind for --data.",
     )
