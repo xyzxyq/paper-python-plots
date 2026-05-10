@@ -23,6 +23,7 @@ Use this skill when numeric truth matters and the final output should look like 
 ## Plot Choices
 
 - **Bar charts / benchmark bars**: use the current `rl_benchmark` implementation by default, but describe the output as bar charts unless the user explicitly asks for RL/control benchmarks. Prefer multi-panel task grids, vertical labels inside method bars, safe outside labels for very short bars, horizontal bars for parameters/FPS/cost, and bottom shared legends with square color swatches.
+- **Neural-network / classification reports**: use `nn_report` for deep-learning homework, OCR/classification experiments, model comparison tables, training curves, ablations, and error-count reductions. Prefer horizontal method scoreboards for long method names, endpoint-labeled training curves with thinned markers, table-like ablation heatmaps for 95-99% metrics, and waterfall/lollipop views for wrong-sample reduction.
 - **CVPR qualitative results**: use `cvpr_qualitative` with `qual-grid` for image/result grids, method columns, compact row labels, and thin separators. Do not copy paper figures; use the style grammar on the user's own data/images.
 - **ECCV low-level vision**: use `eccv_lowlevel` for restoration, flow, spectral, or dense visual-comparison panels where metric callouts sit near qualitative rows.
 - **ICML dense results**: use `icml_dense` for ablation matrices, metric suites, compact benchmark curves, pareto tradeoffs, and multi-metric dashboards.
@@ -47,7 +48,7 @@ Use this skill when numeric truth matters and the final output should look like 
 ## Bundled Resources
 
 - `scripts/paper_plot.py`
-  Compatibility CLI and import surface. Run `python scripts/paper_plot.py --demo bars --out <folder>` for the default bar-chart style or `--demo qual-grid|metric-suite|ablation-matrix|pareto-scatter|uncertainty-map` for top-paper-inspired styles. Use `--demo sem-palettes` to show the accepted raw-points+SEM style across major screenshot-inspired color families, and `--demo readme-gallery` to regenerate the open-source README gallery. `--demo rl-bars` remains available as a compatibility alias. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.xlsx --kind rl-benchmark-grid --panel Panel --group Method --value Score --subtitle Subtitle --orientation Orientation --error Error --display-value Display --out figures`.
+  Compatibility CLI and import surface. Run `python scripts/paper_plot.py --demo bars --out <folder>` for the default bar-chart style or `--demo nn-report|qual-grid|metric-suite|ablation-matrix|pareto-scatter|uncertainty-map` for specialized paper styles. Use `--demo sem-palettes` to show the accepted raw-points+SEM style across major screenshot-inspired color families, and `--demo readme-gallery` to regenerate the open-source README gallery. `--demo rl-bars` remains available as a compatibility alias. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.csv --kind classification-report --group method --value accuracy --y macro_f1 --error wrong --series family --style nn_report --out figures`.
 - `scripts/paperplots/`
   Layered implementation modules for style registries, palettes, top-paper plotters, and demo data. Prefer adding new families here rather than expanding the CLI file.
 - `scripts/collect_top_paper_figures.py`
@@ -72,6 +73,7 @@ Use this skill when numeric truth matters and the final output should look like 
 - Use the `rl_benchmark` implementation for bar figures by default, while calling it the default bar-chart style in user-facing text.
 - Use `soft_edge` for most non-heatmap categorical figures when the user wants the screenshot-like fill/edge aesthetic.
 - Use `cvpr_qualitative`, `eccv_lowlevel`, `icml_dense`, or `aaai_geo` when the user references top-conference result figures, image comparison grids, dense ablations, pareto tradeoffs, or uncertainty/map-like outputs.
+- Use `nn_report` when the data columns look like `method, accuracy, macro_f1, wrong, family`, or when the user asks for neural-network, OCR, classification, training-curve, ablation, or error-reduction figures.
 - For RL/AI benchmark grids, pair `--style rl_benchmark` with `--palette rl_pastel`.
 - For RL/AI bar grids, use square fill/edge legend swatches. Reserve marker shapes for line/curve plots that actually draw markers.
 - Use semantic colors: blue for proposed/key method, green for gains/improvements, red/pink for baselines or contrasts, neutral gray for references/background, gold for a single highlight.

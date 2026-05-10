@@ -21,6 +21,13 @@ from .top_paper_plots import (
     qualitative_result_grid,
     uncertainty_map_plot,
 )
+from .nn_report_plots import (
+    ablation_table_figure,
+    classification_report_figure,
+    demo_nn_report_figures,
+    error_reduction_figure,
+    training_curves_figure,
+)
 
 __all__ = [
     "TOP_PAPER_PALETTES",
@@ -40,4 +47,9 @@ __all__ = [
     "pareto_scatter_plot",
     "qualitative_result_grid",
     "uncertainty_map_plot",
+    "ablation_table_figure",
+    "classification_report_figure",
+    "demo_nn_report_figures",
+    "error_reduction_figure",
+    "training_curves_figure",
 ]

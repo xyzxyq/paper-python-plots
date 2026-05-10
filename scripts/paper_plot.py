@@ -33,15 +33,20 @@ from paperplots import (
     SOFT_EDGE_PALETTES,
     TOP_PAPER_PALETTES,
     WEB_INSPIRED_PALETTES,
+    ablation_table_figure,
     ablation_matrix_plot,
+    classification_report_figure,
     demo_ablation_matrix,
     demo_metric_suite,
+    demo_nn_report_figures,
     demo_pareto_scatter,
     demo_qual_grid,
     demo_uncertainty_map,
+    error_reduction_figure,
     metric_suite_dashboard,
     pareto_scatter_plot,
     qualitative_result_grid,
+    training_curves_figure,
     uncertainty_map_plot,
 )
 
@@ -73,6 +78,8 @@ STYLE_PRESETS = {
     "icml_dense": FigureStyle("icml_dense", 8.8, 0.95, 0.8, 3.0, 1.45, 4.2, 0.85, True),
     "aaai_geo": FigureStyle("aaai_geo", 9.4, 0.9, 0.8, 3.2, 1.55, 4.2, 0.9, True),
     "paper_showcase": FigureStyle("paper_showcase", 9.6, 0.92, 0.78, 3.0, 1.65, 4.4, 0.95, True),
+    "nn_report": FigureStyle("nn_report", 8.8, 0.9, 0.78, 3.0, 1.45, 4.2, 0.92, True),
+    "deep_learning_report": FigureStyle("deep_learning_report", 8.8, 0.9, 0.78, 3.0, 1.45, 4.2, 0.92, True),
 }
 
 
@@ -1631,7 +1638,7 @@ def _demo_rl_panels() -> list[dict[str, object]]:
 
 def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style_name: str = "rl_benchmark") -> list[Path]:
     if kind == "readme-gallery":
-        selected = ["bars", "sem-palettes", "violin", "line", "ablation-matrix", "pareto-scatter", "qual-grid", "uncertainty-map"]
+        selected = ["bars", "nn-report", "sem-palettes", "violin", "line", "ablation-matrix", "pareto-scatter", "qual-grid", "uncertainty-map"]
         made: list[Path] = []
         for item in selected:
             made.extend(demo(item, out_dir, formats, dpi, style_name=style_name))
@@ -1715,6 +1722,13 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
         if kind == "rl-bars":
             made.extend(save_figure(fig, out / "demo_rl_benchmark_bars", formats=formats, dpi=max(dpi, 600)))
         plt.close(fig)
+        style = setup_theme(style_name)
+
+    if kind in {"nn-report", "all"}:
+        setup_theme("nn_report")
+        for name, fig in demo_nn_report_figures().items():
+            made.extend(save_figure(fig, out / name, formats=formats, dpi=dpi))
+            plt.close(fig)
         style = setup_theme(style_name)
 
     if kind in {"ai-bars", "all"}:
@@ -1858,6 +1872,7 @@ def plot_from_table(
     error: str | None = None,
     display_value: str | None = None,
     output_name: str | None = None,
+    title: str | None = None,
     style_name: str = "rl_benchmark",
     palette_name: str = "rl_pastel",
     annotate_values: bool = False,
@@ -1869,11 +1884,62 @@ def plot_from_table(
     data = read_table(data_path)
     out = Path(out_dir)
     stem = output_name or f"{Path(data_path).stem}_{kind.replace('-', '_')}"
-    soft_default_kinds = {"violin", "line", "scatter", "radar", "radial-ridge", "pareto-scatter", "metric-suite"}
+    plot_title = title or stem.replace("_", " ")
+    soft_default_kinds = {"violin", "line", "training-curves", "scatter", "radar", "radial-ridge", "pareto-scatter", "metric-suite"}
     effective_palette = "soft_edge" if palette_name == "rl_pastel" and kind in soft_default_kinds else palette_name
     colors = palette(effective_palette, 24, "fill" if effective_palette == "rl_pastel" else "edge")
 
-    if kind == "bar":
+    if kind == "classification-report":
+        if not group or not value:
+            raise ValueError("--kind classification-report requires --group as method column and --value as accuracy/primary score column.")
+        setup_theme("nn_report" if style_name in {"rl_benchmark", "deep_learning_report"} else style_name)
+        fig = classification_report_figure(
+            data,
+            method_col=group,
+            accuracy_col=value,
+            f1_col=y if y in data.columns else None,
+            wrong_col=error if error in data.columns else None,
+            family_col=series if series in data.columns else None,
+            title=plot_title,
+        )
+    elif kind == "training-curves":
+        metric_value = y or value
+        method_col = series or group
+        if not x or not metric_value or not method_col:
+            raise ValueError("--kind training-curves requires --x, --y or --value, and --series or --group.")
+        setup_theme("nn_report" if style_name in {"rl_benchmark", "deep_learning_report"} else style_name)
+        fig = training_curves_figure(
+            data,
+            step_col=x,
+            value_col=metric_value,
+            method_col=method_col,
+            metric_col=panel if panel in data.columns else None,
+            title=plot_title,
+        )
+    elif kind == "ablation-table":
+        if not x or not series or not value:
+            raise ValueError("--kind ablation-table requires --x, --series, and --value.")
+        setup_theme("nn_report" if style_name in {"rl_benchmark", "deep_learning_report"} else style_name)
+        fig = ablation_table_figure(
+            data,
+            row_col=series,
+            col_col=x,
+            value_col=value,
+            error_col=error if error in data.columns else None,
+            title=plot_title,
+        )
+    elif kind == "error-reduction":
+        if not group or not value:
+            raise ValueError("--kind error-reduction requires --group as method column and --value as wrong/error count column.")
+        setup_theme("nn_report" if style_name in {"rl_benchmark", "deep_learning_report"} else style_name)
+        fig = error_reduction_figure(
+            data,
+            method_col=group,
+            wrong_col=value,
+            family_col=series if series in data.columns else None,
+            title=plot_title,
+        )
+    elif kind == "bar":
         if not group or not value:
             raise ValueError("--kind bar requires --group and --value.")
         if style_name == "rl_benchmark":
@@ -1885,7 +1951,7 @@ def plot_from_table(
                 methods,
                 summary["mean"].to_numpy(dtype=float),
                 errors=summary["sem"].fillna(0).to_numpy(dtype=float),
-                title=stem.replace("_", " "),
+                title=plot_title,
                 ylabel=value,
             )
         else:
@@ -2009,7 +2075,7 @@ def plot_from_table(
                     image_path = Path(data_path).parent / image_path
                 row_images.append(mpimg.imread(image_path))
             images.append(row_images)
-        fig = qualitative_result_grid(images, row_labels, col_labels, title=stem.replace("_", " "), style_name=style_name)
+        fig = qualitative_result_grid(images, row_labels, col_labels, title=plot_title, style_name=style_name)
     elif kind == "metric-suite":
         if not x or not group or not value:
             raise ValueError("--kind metric-suite requires --x metric column, --group method column, and --value.")
@@ -2018,7 +2084,7 @@ def plot_from_table(
             list(pivot.columns.astype(str)),
             list(pivot.index.astype(str)),
             pivot.to_numpy(dtype=float),
-            title=stem.replace("_", " "),
+            title=plot_title,
             style_name=style_name,
         )
     elif kind == "ablation-matrix":
@@ -2031,7 +2097,7 @@ def plot_from_table(
             pivot.to_numpy(dtype=float),
             list(pivot.index.astype(str)),
             list(pivot.columns.astype(str)),
-            title=stem.replace("_", " "),
+            title=plot_title,
             style_name=style_name,
         )
     elif kind == "pareto-scatter":
@@ -2049,7 +2115,7 @@ def plot_from_table(
             size=sizes,
             xlabel=x,
             ylabel=y,
-            title=stem.replace("_", " "),
+            title=plot_title,
             style_name=style_name,
         )
     elif kind == "uncertainty-map":
@@ -2062,7 +2128,7 @@ def plot_from_table(
                 raise ValueError("--kind uncertainty-map requires numeric columns or --x/--y/--value.")
             matrix = numeric.to_numpy(dtype=float)
         fig, ax = plt.subplots(figsize=(5.2, 4.1), layout="constrained")
-        uncertainty_map_plot(ax, matrix, title=stem.replace("_", " "), style_name=style_name)
+        uncertainty_map_plot(ax, matrix, title=plot_title, style_name=style_name)
     else:
         raise ValueError(f"Unsupported table plot kind: {kind}")
 
@@ -2089,6 +2155,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "readme-gallery",
             "bars",
             "bar",
+            "nn-report",
             "sem-palettes",
             "violin",
             "line",
@@ -2120,8 +2187,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--kind",
         choices=[
             "bar",
+            "classification-report",
             "violin",
             "line",
+            "training-curves",
             "scatter",
             "heatmap",
             "grouped-bar",
@@ -2134,6 +2203,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "qual-grid",
             "metric-suite",
             "ablation-matrix",
+            "ablation-table",
+            "error-reduction",
             "pareto-scatter",
             "uncertainty-map",
         ],
@@ -2150,6 +2221,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--error", help="Error-bar column for rl-benchmark-grid vertical panels.")
     parser.add_argument("--display-value", help="Display-value column for rl-benchmark-grid horizontal labels.")
     parser.add_argument("--output-name", help="Output base filename without extension.")
+    parser.add_argument("--title", help="Figure title. Defaults to a title derived from the output filename.")
     parser.add_argument("--annotate-values", action="store_true", help="Add direct value labels to bar charts.")
     parser.add_argument("--legend-panel", action="store_true", help="Use a dedicated legend panel when supported.")
     args = parser.parse_args(argv)
@@ -2184,6 +2256,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             error=args.error,
             display_value=args.display_value,
             output_name=args.output_name,
+            title=args.title,
             style_name=args.style,
             palette_name=args.palette,
             annotate_values=args.annotate_values,

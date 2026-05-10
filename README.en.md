@@ -15,18 +15,19 @@ The baseline path stays lightweight: **Matplotlib + NumPy + pandas**. If Seaborn
 
 All images below are generated demos from this repository, not copied paper figures.
 
-| Bar Charts | SEM Palettes | Distribution | Training Curves |
+| Bar Charts | Neural Network Report | SEM Palettes | Training Curves |
 |---|---|---|---|
-| ![Bar charts](assets/gallery/demo_bar_charts.png) | ![SEM palettes](assets/gallery/demo_bar_scatter_sem_palettes.png) | ![Distribution](assets/gallery/demo_violin_box_points.png) | ![Training curves](assets/gallery/demo_line_ci.png) |
+| ![Bar charts](assets/gallery/demo_bar_charts.png) | ![Neural network report](assets/gallery/demo_nn_classification_report.png) | ![SEM palettes](assets/gallery/demo_bar_scatter_sem_palettes.png) | ![Training curves](assets/gallery/demo_nn_training_curves.png) |
 
-| Ablation Matrix | Pareto Trade-off | Qualitative Grid | Uncertainty Map |
+| Ablation Table | Error Reduction | Pareto Trade-off | Qualitative Grid |
 |---|---|---|---|
-| ![Ablation matrix](assets/gallery/demo_ablation_matrix.png) | ![Pareto scatter](assets/gallery/demo_pareto_scatter.png) | ![Qualitative grid](assets/gallery/demo_qual_grid.png) | ![Uncertainty map](assets/gallery/demo_uncertainty_map.png) |
+| ![Ablation table](assets/gallery/demo_nn_ablation_table.png) | ![Error reduction](assets/gallery/demo_nn_error_reduction.png) | ![Pareto scatter](assets/gallery/demo_pareto_scatter.png) | ![Qualitative grid](assets/gallery/demo_qual_grid.png) |
 
 ## When To Use It
 
 - You have CSV, Excel, pandas, or NumPy data and need a paper-style result figure.
 - You are unsure whether to use bars, rainclouds, training curves, heatmaps, Pareto plots, or multi-panel layouts.
+- You are writing a neural-network, OCR, classification, ablation, or course-project report.
 - You want raw points, SEM/CI, statistical annotations, direct labels, consistent palettes, and vector exports.
 - You want Codex to write reusable Python plotting code based on a target paper style.
 - You want top-conference-inspired layout principles without copying copyrighted paper figures.
@@ -60,6 +61,47 @@ python scripts/paper_plot.py --list-styles
 python scripts/paper_plot.py --list-palettes
 ```
 
+## Neural-Network / Classification / OCR Reports
+
+If your table looks like this, prefer `nn_report`:
+
+```csv
+method,accuracy,macro_f1,wrong,family
+ResNet18,0.700,0.585,60,CNN
+ConvNeXt-Tiny,0.925,0.892,15,CNN
+OCR+BiLSTM,0.990,0.983,2,Hybrid
+```
+
+It avoids crowded rotated method names, uses horizontal scoreboards, puts error counts in side badges, and keeps family colors consistent.
+
+```bash
+python scripts/paper_plot.py \
+  --data paper_result_summary.csv \
+  --kind classification-report \
+  --group method \
+  --value accuracy \
+  --y macro_f1 \
+  --error wrong \
+  --series family \
+  --style nn_report \
+  --title "OCR Classification Results" \
+  --out figures
+```
+
+Wrong-sample reduction:
+
+```bash
+python scripts/paper_plot.py \
+  --data paper_result_summary.csv \
+  --kind error-reduction \
+  --group method \
+  --value wrong \
+  --series family \
+  --style nn_report \
+  --title "Wrong Sample Reduction" \
+  --out figures
+```
+
 ## Prompting Guide
 
 A good prompt includes: **data location + scientific claim + figure style + export requirements**.
@@ -80,11 +122,22 @@ Prefer raw-data-visible plots and add SEM/CI only when justified.
 Do not hide the sample distribution just to make the figure cleaner.
 ```
 
+For a neural-network course project:
+
+```text
+Use $paper-python-plots.
+My table has method, accuracy, macro_f1, wrong, and family.
+Use nn_report to draw a classification comparison and an error-reduction figure.
+Method names are long, so prefer horizontal scoreboards instead of rotated x-axis labels.
+Show wrong counts as small side badges rather than inside bars.
+```
+
 ## Style-Specific Prompts
 
 | Goal | Prompt |
 |---|---|
 | Default benchmark bars | `Use the default bar-chart style: light gray panels, pastel fills, saturated edges, error bars, shared legend, and paper benchmark layout.` |
+| Neural-network classification report | `Use nn_report with method, accuracy, macro_f1, wrong, and family; use horizontal method scoreboards and error-count badges.` |
 | Raw Points + SEM | `Draw Bar + Raw Points + SEM with light fills, strong edges, all raw samples, mean bars, and SEM error bars.` |
 | Distribution | `Draw a high-quality distribution figure, preferably raincloud or violin + box + raw points, with sample size and mean/median markers.` |
 | Training curves | `Draw top-conference-style training curves with mean lines, CI ribbons, markers, endpoint labels, and a shared legend.` |
@@ -98,6 +151,7 @@ Do not hide the sample distribution just to make the figure cleaner.
 | Name | Best For |
 |---|---|
 | `--demo bars` | Default bar charts for benchmark, method comparison, and resource results. |
+| `--demo nn-report` | Neural-network/OCR/classification report figures: method scoreboard, training curves, ablation table, and error reduction. |
 | `--demo sem-palettes` | Raw Points + SEM palette families. |
 | `--demo violin` | Raincloud-style distribution plots. |
 | `--demo line` | Training curves and trends. |
@@ -109,6 +163,7 @@ Do not hide the sample distribution just to make the figure cleaner.
 | Style | Best For |
 |---|---|
 | `rl_benchmark` | Default bar-chart style. The name is kept for compatibility; user-facing docs call it Bar Charts. |
+| `nn_report` | Neural-network, OCR, classification, training-curve, ablation, and error-reduction reports. |
 | `paper_showcase` | General top-paper visual polish. |
 | `cvpr_qualitative` | Qualitative grids, method columns, metric badges, and zoom callouts. |
 | `icml_dense` | Training curves, ablation matrices, metric suites, and Pareto trade-offs. |
@@ -122,6 +177,12 @@ Render the full showcase:
 
 ```bash
 python scripts/paper_plot.py --demo all --out paper_plot_demo
+```
+
+Render the neural-network report showcase:
+
+```bash
+python scripts/paper_plot.py --demo nn-report --out paper_plot_nn_report
 ```
 
 Render a bar chart from a table:
@@ -163,6 +224,22 @@ python scripts/paper_plot.py \
   --out figures
 ```
 
+Render a neural-network classification report:
+
+```bash
+python scripts/paper_plot.py \
+  --data paper_result_summary.csv \
+  --kind classification-report \
+  --group method \
+  --value accuracy \
+  --y macro_f1 \
+  --error wrong \
+  --series family \
+  --style nn_report \
+  --title "OCR Classification Results" \
+  --out figures
+```
+
 The default export set is `PDF + SVG + PNG`. To export PNG only:
 
 ```bash
@@ -172,8 +249,10 @@ python scripts/paper_plot.py --demo bars --out paper_plot_demo --formats png
 ## Suggested Data Columns
 
 - Group comparison: `Group` / `Method` / `Condition` + `Value`.
+- Classification/OCR report: `method`, `accuracy`, `macro_f1`, `wrong`, `family`.
+- Training curves: `epoch` / `step`, `method`, `metric`, `value`.
+- Ablation table: `component`, `setting`, `accuracy`, optional `wrong`.
 - Error-bar bars: `Method`, `Score`, `SEM` or `Error`.
-- Training curves: `Step`, `Score`, `Method`, with repeated rows per step when available.
 - Ablation matrix: `Component`, `Model`, `Score`.
 - Pareto plot: `Method`, `Latency` / `Cost`, `Score`, optional `Params`.
 - Multi-panel figures: add `Panel`, `Subtitle`, `Orientation`, or similar columns.
