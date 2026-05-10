@@ -16,6 +16,11 @@ The helper script exposes:
 - `ai_semantic`: figures4papers-inspired AI-paper palette with explicit semantic roles.
 - `screenshot`: soft fill/dark edge pairs inspired by the user's screenshots.
 - `soft_edge`: expanded screenshot-inspired categorical palette; for groups it samples across hue families while keeping light fills plus saturated outlines.
+- `soft_edge_vivid`: stronger screenshot-inspired edge colors for line, scatter, and Pareto plots that need more punch.
+- `ml_conference`: saturated method colors for top-conference benchmark curves.
+- `nature_muted`: restrained multi-hue palette for journal-like panels.
+- `colorblind_bright`: Okabe-Ito-like bright colors for accessibility-sensitive figures.
+- `scientific_sequential`: blue-green sequential palette for magnitude and uncertainty heatmaps.
 - `okabe_ito`: colorblind-aware categorical palette.
 - `journal_muted`: restrained paper-style colors for multi-series plots.
 - `nature_soft`: subdued fill colors with darker outlines.
@@ -109,6 +114,16 @@ Rules:
 - For qualitative grids, reserve strong colors for method labels, dividers, callout boxes, or metric badges; do not tint the images themselves unless the data encoding requires it.
 - For ablation matrices and uncertainty maps, use sequential colormaps for magnitude and add explicit colorbar labels.
 - For pareto plots, use direct labels and one highlighted method instead of a crowded legend.
+
+## Optional Web Palette Adapters
+
+When the packages are already installed, the CLI exposes additional palette names without requiring them:
+
+- `seaborn_deep`, `seaborn_muted`, `seaborn_bright`, `seaborn_pastel`, `seaborn_dark`, `seaborn_colorblind`.
+- `cmasher_*` scientific colormap samples for continuous-looking categorical ramps.
+- `colorcet_glasbey` for many visually separated categories and `colorcet_fire` for sequential emphasis.
+
+Keep these optional. The baseline skill must remain usable with Matplotlib, NumPy, and pandas only.
 
 ## Continuous Colormaps
 

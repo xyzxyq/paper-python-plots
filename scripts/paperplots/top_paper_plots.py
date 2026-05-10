@@ -72,6 +72,28 @@ def _synthetic_image(seed: int, size: int = 72) -> np.ndarray:
     return np.dstack((img, np.roll(img, 5, axis=0), np.roll(img, -7, axis=1)))
 
 
+def _method_variant(base: np.ndarray, method: str, seed: int) -> np.ndarray:
+    """Create deterministic method-result variants from one synthetic scene."""
+
+    rng = np.random.default_rng(seed)
+    if method.lower() == "input":
+        gray = base.mean(axis=2, keepdims=True)
+        return np.clip(np.repeat(gray, 3, axis=2) * 0.82 + rng.normal(0, 0.045, base.shape), 0, 1)
+    if method.lower() == "baseline":
+        blurred = (
+            base
+            + np.roll(base, 1, axis=0)
+            + np.roll(base, -1, axis=0)
+            + np.roll(base, 1, axis=1)
+            + np.roll(base, -1, axis=1)
+        ) / 5.0
+        return np.clip(blurred * 0.9 + rng.normal(0, 0.035, base.shape), 0, 1)
+    if method.lower() == "ours":
+        sharpened = np.clip(base + 0.55 * (base - np.roll(base, 2, axis=0)), 0, 1)
+        return np.clip(sharpened * 0.96 + 0.025, 0, 1)
+    return np.clip(base, 0, 1)
+
+
 def qualitative_result_grid(
     images: Sequence[Sequence[np.ndarray]],
     row_labels: Sequence[str],
@@ -84,8 +106,8 @@ def qualitative_result_grid(
 
     look = get_top_paper_look(style_name)
     rows, cols = len(images), len(images[0])
-    fig = plt.figure(figsize=(1.52 * cols + 0.95, 1.32 * rows + 0.9), layout=None)
-    gs = GridSpec(rows, cols, figure=fig, left=0.085, right=0.99, top=0.86, bottom=0.075, wspace=0.035, hspace=0.085)
+    fig = plt.figure(figsize=(1.62 * cols + 1.05, 1.34 * rows + 1.05), layout=None)
+    gs = GridSpec(rows, cols, figure=fig, left=0.082, right=0.99, top=0.835, bottom=0.08, wspace=0.035, hspace=0.085)
     metric_rng = np.random.default_rng(314)
     for r in range(rows):
         for c in range(cols):
@@ -111,7 +133,7 @@ def qualitative_result_grid(
                     rotation=90,
                 )
             if c > 0:
-                score = 25.0 + 8.5 * c + metric_rng.normal(0, 0.6)
+                score = 24.0 + 5.6 * c + metric_rng.normal(0, 0.35)
                 badge_color = _soft_edge(c)
                 ax.text(
                     0.04,
@@ -137,8 +159,8 @@ def qualitative_result_grid(
                 for spine in inset.spines.values():
                     spine.set_edgecolor("#FFD166")
                     spine.set_linewidth(1.1)
-    fig.suptitle(title, fontsize=11.5, y=0.985)
-    fig.text(0.085, 0.91, "method comparison with metric badges and local zoom callouts", fontsize=7.3, color=look.muted_text)
+    fig.suptitle(title, fontsize=12.0, y=0.982, fontweight="bold")
+    fig.text(0.082, 0.892, "aligned method columns, metric badges, and local zoom callouts", fontsize=7.4, color=look.muted_text)
     return fig
 
 
@@ -154,8 +176,8 @@ def metric_suite_dashboard(
 
     look = get_top_paper_look(style_name)
     arr = np.asarray(values, dtype=float)
-    fig = plt.figure(figsize=(2.45 * len(metrics), 3.05), layout=None)
-    gs = fig.add_gridspec(1, len(metrics), left=0.075, right=0.985, top=0.80, bottom=0.27, wspace=0.32)
+    fig = plt.figure(figsize=(2.55 * len(metrics), 3.25), layout=None)
+    gs = fig.add_gridspec(1, len(metrics), left=0.072, right=0.986, top=0.78, bottom=0.27, wspace=0.32)
     axes = np.asarray([fig.add_subplot(gs[0, i]) for i in range(len(metrics))])
     axes = np.atleast_1d(axes)
     edges = [_soft_edge(i) for i in range(len(methods))]
@@ -173,7 +195,7 @@ def metric_suite_dashboard(
         _style_axis(ax, look)
         ax.set_title(metric, fontsize=9.2, pad=8)
         ax.set_xticks(np.arange(len(methods)), [methods[i] for i in order], rotation=35, ha="right", fontsize=7.2)
-        ax.set_ylim(0, max(column) * 1.20)
+        ax.set_ylim(max(0, float(np.nanmin(column)) - 0.12), max(column) * 1.12)
         ax.axhline(float(np.nanmean(column)), color="#7F7F7F", linestyle="--", linewidth=0.75, alpha=0.65, zorder=1)
         for bar, value in zip(bars, column[order]):
             is_best = np.isclose(value, np.nanmax(column))
@@ -191,7 +213,8 @@ def metric_suite_dashboard(
             )
     handles = [Patch(facecolor=fills[i], edgecolor=edges[i], linewidth=1.0, label=method) for i, method in enumerate(methods)]
     fig.legend(handles=handles, loc="lower center", ncol=len(methods), frameon=False, bbox_to_anchor=(0.5, 0.04), fontsize=7.8)
-    fig.suptitle(title, fontsize=11.3, y=0.965)
+    fig.suptitle(title, fontsize=12.0, y=0.962, fontweight="bold")
+    fig.text(0.075, 0.845, "shared method ordering with direct values and mean baselines", fontsize=7.5, color=look.muted_text)
     return fig
 
 
@@ -211,7 +234,7 @@ def ablation_matrix_plot(
     arr = np.asarray(matrix, dtype=float)
     im = ax.imshow(arr, cmap=cmap, aspect="auto")
     ax.set_facecolor(look.panel_face)
-    ax.set_title(title, fontsize=10.0, pad=9)
+    ax.set_title(title, fontsize=10.6, pad=10, fontweight="bold")
     ax.set_xticks(np.arange(len(col_labels)), col_labels, rotation=30, ha="right")
     ax.set_yticks(np.arange(len(row_labels)), row_labels)
     baseline = arr[0]
@@ -232,6 +255,7 @@ def ablation_matrix_plot(
         spine.set_visible(False)
     cbar = ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
     cbar.set_label("Score", labelpad=4)
+    cbar.outline.set_linewidth(0.6)
 
 
 def pareto_scatter_plot(
@@ -262,7 +286,7 @@ def pareto_scatter_plot(
         if ys[idx] >= best_y:
             frontier.append(int(idx))
             best_y = float(ys[idx])
-    ax.plot(xs[frontier], ys[frontier], color="#111111", linewidth=1.15, linestyle="--", alpha=0.72, zorder=2)
+    ax.plot(xs[frontier], ys[frontier], color="#111111", linewidth=1.35, linestyle="--", alpha=0.78, zorder=2)
     ax.scatter(xs, ys, s=scaled_sizes, facecolors=fills, edgecolors=colors, alpha=0.92, linewidth=1.25, zorder=3)
     for idx, (xi, yi, label) in enumerate(zip(xs, ys, labels)):
         is_frontier = idx in frontier
@@ -281,10 +305,10 @@ def pareto_scatter_plot(
             ax.scatter([], [], s=70 + 130 * (v - np.nanmin(sizes)) / max(float(np.nanmax(sizes) - np.nanmin(sizes)), 1e-9), facecolors="#ECECEC", edgecolors="#777777", label=f"{v:g}")
             for v in legend_sizes
         ]
-        ax.legend(handles=handles, title="Size", frameon=False, loc="lower right", fontsize=7.0, title_fontsize=7.2)
+        ax.legend(handles=handles, title="Params", frameon=False, loc="lower right", fontsize=7.0, title_fontsize=7.2)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_title(title)
+    ax.set_title(title, fontweight="bold", pad=9)
     _style_axis(ax, look)
 
 
@@ -304,7 +328,7 @@ def uncertainty_map_plot(
     im = ax.imshow(arr, cmap=cmap, interpolation="bilinear")
     levels = np.linspace(float(np.nanmin(arr)), float(np.nanmax(arr)), 5)
     ax.contour(arr, levels=levels[1:-1], colors="white", linewidths=0.55, alpha=0.62)
-    ax.set_title(title, fontsize=9.8, pad=7)
+    ax.set_title(title, fontsize=10.2, pad=8, fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
     for spine in ax.spines.values():
@@ -314,21 +338,25 @@ def uncertainty_map_plot(
     ax.text(0.07, 0.887, "region", transform=ax.transAxes, fontsize=6.2, va="center", ha="left", color="#111111")
     cbar = ax.figure.colorbar(im, ax=ax, fraction=0.045, pad=0.025)
     cbar.set_label(colorbar_label)
+    cbar.outline.set_linewidth(0.6)
     ax.set_facecolor(look.panel_face)
 
 
 def demo_qual_grid() -> plt.Figure:
     rows = ["Scene A", "Scene B", "Scene C"]
     cols = ["Input", "Baseline", "Ours", "GT"]
-    images = [[_synthetic_image(100 + r * 7 + c) for c in range(len(cols))] for r in range(len(rows))]
+    images = []
+    for r in range(len(rows)):
+        base = _synthetic_image(100 + r * 9)
+        images.append([_method_variant(base, col, 300 + r * 11 + c) for c, col in enumerate(cols)])
     return qualitative_result_grid(images, rows, cols, title="Qualitative Result Grid")
 
 
 def demo_metric_suite() -> plt.Figure:
     rng = np.random.default_rng(11)
     methods = ["Base", "Aug", "Ours-S", "Ours-L"]
-    metrics = ["Acc.", "Robust", "Speed"]
-    base = np.array([[0.72, 0.61, 0.83], [0.76, 0.66, 0.74], [0.82, 0.71, 0.69], [0.86, 0.78, 0.62]])
+    metrics = ["Acc.", "Robust", "Speed", "Calib."]
+    base = np.array([[0.72, 0.61, 0.83, 0.68], [0.76, 0.66, 0.74, 0.73], [0.82, 0.71, 0.69, 0.79], [0.86, 0.78, 0.62, 0.84]])
     values = np.clip(base + rng.normal(0, 0.015, size=base.shape), 0, 1)
     return metric_suite_dashboard(metrics, methods, values, title="Metric Suite")
 
@@ -337,7 +365,7 @@ def demo_ablation_matrix() -> plt.Figure:
     rows = ["No pretrain", "+ data", "+ loss", "+ scale"]
     cols = ["Small", "Base", "Large", "XL"]
     values = np.array([[0.61, 0.65, 0.67, 0.68], [0.67, 0.72, 0.75, 0.76], [0.70, 0.76, 0.80, 0.82], [0.72, 0.79, 0.84, 0.87]])
-    fig, ax = plt.subplots(figsize=(4.2, 3.0), layout="constrained")
+    fig, ax = plt.subplots(figsize=(4.75, 3.25), layout="constrained")
     ablation_matrix_plot(ax, values, rows, cols)
     return fig
 
@@ -347,7 +375,7 @@ def demo_pareto_scatter() -> plt.Figure:
     x = np.array([18, 10, 34, 15, 26])
     y = np.array([0.71, 0.66, 0.78, 0.81, 0.86])
     sizes = np.array([95, 70, 150, 105, 135])
-    fig, ax = plt.subplots(figsize=(4.2, 3.0), layout="constrained")
+    fig, ax = plt.subplots(figsize=(4.85, 3.35), layout="constrained")
     pareto_scatter_plot(ax, x, y, labels, size=sizes, xlabel="Latency (ms)", ylabel="Score")
     return fig
 
@@ -358,7 +386,7 @@ def demo_uncertainty_map() -> plt.Figure:
     signal = np.exp(-(xx**2 + yy**2)) + 0.45 * np.exp(-((xx - 1.3) ** 2 + (yy + 0.8) ** 2) / 0.7)
     uncertainty = np.clip(1.0 - signal + rng.normal(0, 0.035, size=signal.shape), 0, 1)
     residual = np.abs(signal - np.roll(signal, 6, axis=1))
-    fig, axes = plt.subplots(1, 3, figsize=(7.6, 2.65), layout="constrained")
+    fig, axes = plt.subplots(1, 3, figsize=(8.25, 2.85), layout="constrained")
     uncertainty_map_plot(axes[0], signal, title="Trait Prediction", colorbar_label="Trait", cmap="YlGn")
     uncertainty_map_plot(axes[1], uncertainty, title="Predictive Uncertainty", colorbar_label="Std.", cmap="magma")
     uncertainty_map_plot(axes[2], residual, title="Residual Hotspots", colorbar_label="Abs. err.", cmap="YlOrRd")

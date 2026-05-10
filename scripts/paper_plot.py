@@ -31,6 +31,7 @@ from paperplots import (
     SOFT_EDGE_EDGES,
     SOFT_EDGE_FILLS,
     TOP_PAPER_PALETTES,
+    WEB_INSPIRED_PALETTES,
     ablation_matrix_plot,
     demo_ablation_matrix,
     demo_metric_suite,
@@ -70,6 +71,7 @@ STYLE_PRESETS = {
     "eccv_lowlevel": FigureStyle("eccv_lowlevel", 9.2, 0.9, 0.75, 3.0, 1.5, 4.0, 0.85, True),
     "icml_dense": FigureStyle("icml_dense", 8.8, 0.95, 0.8, 3.0, 1.45, 4.2, 0.85, True),
     "aaai_geo": FigureStyle("aaai_geo", 9.4, 0.9, 0.8, 3.2, 1.55, 4.2, 0.9, True),
+    "paper_showcase": FigureStyle("paper_showcase", 9.6, 0.92, 0.78, 3.0, 1.65, 4.4, 0.95, True),
 }
 
 
@@ -180,11 +182,49 @@ PALETTES = {
     "ai_semantic": AI_SEMANTIC_ORDER,
     "screenshot": [color for block in SCREENSHOT_PALETTES for color in block["edge"]],
     "soft_edge": SOFT_EDGE_EDGES,
+    **WEB_INSPIRED_PALETTES,
     "okabe_ito": OKABE_ITO,
     "journal_muted": JOURNAL_MUTED,
     "nature_soft": NATURE_SOFT,
     **TOP_PAPER_PALETTES,
 }
+
+
+def _optional_palette_adapters() -> dict[str, list[str]]:
+    """Expose palette names from optional libraries when they are installed."""
+
+    adapters: dict[str, list[str]] = {}
+    try:
+        import seaborn as sns  # type: ignore
+
+        for name in ("deep", "muted", "bright", "pastel", "dark", "colorblind"):
+            adapters[f"seaborn_{name}"] = [mcolors.to_hex(color) for color in sns.color_palette(name, 8)]
+    except Exception:
+        pass
+
+    try:
+        import cmasher as cmr  # type: ignore
+
+        for name in ("amber", "ember", "fusion", "rainforest", "ocean"):
+            cmap = cmr.get_sub_cmap(f"cmr.{name}", 0.08, 0.92)
+            adapters[f"cmasher_{name}"] = [mcolors.to_hex(cmap(v)) for v in np.linspace(0.12, 0.88, 8)]
+    except Exception:
+        pass
+
+    try:
+        import colorcet as cc  # type: ignore
+
+        if hasattr(cc, "glasbey"):
+            adapters["colorcet_glasbey"] = list(cc.glasbey[:8])
+        if hasattr(cc, "fire"):
+            cmap = mcolors.LinearSegmentedColormap.from_list("cc_fire", cc.fire)
+            adapters["colorcet_fire"] = [mcolors.to_hex(cmap(v)) for v in np.linspace(0.12, 0.88, 8)]
+    except Exception:
+        pass
+    return adapters
+
+
+PALETTES.update(_optional_palette_adapters())
 
 HATCHES = ["", "//", "\\\\", "..", "xx", "--", "++", "oo"]
 
@@ -1015,7 +1055,7 @@ def line_ci(
             markeredgecolor=color,
             markeredgewidth=0.95,
             color=color,
-            linewidth=2.0,
+            linewidth=2.15,
             label=label_text,
             zorder=3,
         )
@@ -1026,8 +1066,19 @@ def line_ci(
     ax.set_ylabel(ylabel or y)
     if group:
         xmin, xmax = ax.get_xlim()
-        ax.set_xlim(xmin, xmax + (xmax - xmin) * 0.12)
-        for ex, ey, label, color in endpoints:
+        ax.set_xlim(xmin, xmax + (xmax - xmin) * 0.18)
+        endpoints_sorted = sorted(endpoints, key=lambda item: item[1])
+        min_gap = max((ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.075, 1e-6)
+        adjusted: list[tuple[float, float, str, str]] = []
+        last_y = -np.inf
+        for ex, ey, label, color in endpoints_sorted:
+            y_adj = max(ey, last_y + min_gap)
+            adjusted.append((ex, y_adj, label, color))
+            last_y = y_adj
+        ymin, ymax = ax.get_ylim()
+        if adjusted and adjusted[-1][1] > ymax:
+            ax.set_ylim(ymin, adjusted[-1][1] + min_gap)
+        for ex, ey, label, color in adjusted:
             ax.annotate(
                 label,
                 (ex, ey),
@@ -1040,7 +1091,7 @@ def line_ci(
                 fontweight="bold",
                 clip_on=False,
             )
-        ax.legend(loc="upper left", frameon=False, ncol=min(len(groups), 3), handlelength=1.6)
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), frameon=False, ncol=min(len(groups), 5), handlelength=1.7, columnspacing=1.2)
     _paper_panel_axis(ax, grid=True)
     return ax
 
@@ -1064,23 +1115,34 @@ def scatter_regression(
     ys = ys[mask]
 
     fill = blend_with_white(color, 0.56)
-    ax.scatter(xs, ys, s=62, facecolors=fill, edgecolors=color, linewidths=1.05, alpha=0.92, zorder=3)
+    ax.scatter(xs, ys, s=76, facecolors=fill, edgecolors=color, linewidths=1.2, alpha=0.93, zorder=3)
     if xs.size >= 2:
         slope, intercept = np.polyfit(xs, ys, deg=1)
         line_x = np.linspace(xs.min(), xs.max(), 100)
         line_y = slope * line_x + intercept
-        ax.plot(line_x, line_y, color="#222222", linewidth=1.5, alpha=0.76, zorder=2)
-        ax.fill_between(line_x, line_y - np.std(ys - (slope * xs + intercept)), line_y + np.std(ys - (slope * xs + intercept)), color="#BDBDBD", alpha=0.13, linewidth=0)
-        best = int(np.nanargmax(ys))
-        ax.scatter([xs[best]], [ys[best]], s=96, facecolors="#FFF7BC", edgecolors="#B64342", linewidths=1.35, zorder=4)
+        resid_std = float(np.std(ys - (slope * xs + intercept)))
+        ax.plot(line_x, line_y, color="#222222", linewidth=1.55, alpha=0.72, zorder=2)
+        ax.fill_between(line_x, line_y - resid_std, line_y + resid_std, color="#BDBDBD", alpha=0.15, linewidth=0)
+        best = int(np.nanargmax(ys - 0.07 * xs))
+        ax.scatter([xs[best]], [ys[best]], s=118, facecolors="#FFF7BC", edgecolors="#B64342", linewidths=1.5, zorder=4)
         ax.annotate(
-            "best",
+            "highlight",
             (xs[best], ys[best]),
             xytext=(6, 5),
             textcoords="offset points",
             fontsize=7.5,
             color="#B64342",
             fontweight="bold",
+        )
+        ax.text(
+            0.98,
+            0.05,
+            f"trend slope {slope:.2f}",
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=7.0,
+            color="#4B5563",
         )
     ax.set_xlabel(xlabel or x)
     ax.set_ylabel(ylabel or y)
@@ -1324,11 +1386,18 @@ def _demo_grouped(seed: int = 42) -> pd.DataFrame:
 def _demo_time(seed: int = 8) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     rows = []
-    for treatment, boost in [("Vehicle", 0.0), ("Treatment", 0.42)]:
-        for day in range(6):
-            center = 1.0 + 0.14 * day + boost * (1 - math.exp(-day / 2.0))
+    methods = [
+        ("MR.Q", 0.88, 0.52),
+        ("DreamerV3", 0.72, 0.40),
+        ("TD-MPC2", 0.80, 0.45),
+        ("TD7", 0.92, 0.48),
+        ("PPO", 0.46, 0.20),
+    ]
+    for treatment, boost, speed in methods:
+        for day in range(7):
+            center = 0.20 + boost * (1 - math.exp(-day * speed)) + 0.035 * day
             for _ in range(10):
-                rows.append({"day": day, "signal": rng.normal(center, 0.14), "condition": treatment})
+                rows.append({"day": day, "signal": rng.normal(center, 0.045 + 0.012 * day), "condition": treatment})
     return pd.DataFrame(rows)
 
 
@@ -1488,6 +1557,13 @@ def _demo_rl_panels() -> list[dict[str, object]]:
 
 
 def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style_name: str = "rl_benchmark") -> list[Path]:
+    if kind == "readme-gallery":
+        selected = ["bars", "bar", "violin", "line", "ablation-matrix", "pareto-scatter", "qual-grid", "uncertainty-map"]
+        made: list[Path] = []
+        for item in selected:
+            made.extend(demo(item, out_dir, formats, dpi, style_name=style_name))
+        return made
+
     style = setup_theme(style_name)
     out = Path(out_dir)
     made: list[Path] = []
@@ -1513,18 +1589,18 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
 
     if kind in {"line", "all"}:
         setup_theme("compact")
-        fig, ax = plt.subplots(figsize=(3.45, 2.4), layout="constrained")
-        line_ci(_demo_time(), "day", "signal", group="condition", ax=ax, ylabel="Signal", xlabel="Day")
-        ax.set_title("Trajectory with 95% CI")
+        fig, ax = plt.subplots(figsize=(5.6, 3.25), layout="constrained")
+        line_ci(_demo_time(), "day", "signal", group="condition", ax=ax, ylabel="Score", xlabel="Training step (1M)")
+        ax.set_title("Training Curves with 95% CI", pad=9)
         made.extend(save_figure(fig, out / "demo_line_ci", formats=formats, dpi=dpi))
         plt.close(fig)
         style = setup_theme(style_name)
 
     if kind in {"scatter", "all"}:
         setup_theme("compact")
-        fig, ax = plt.subplots(figsize=(3.15, 2.45), layout="constrained")
-        scatter_regression(_demo_scatter(), "dose", "activity", ax=ax, xlabel="Dose", ylabel="Activity")
-        ax.set_title("Relationship")
+        fig, ax = plt.subplots(figsize=(4.45, 3.05), layout="constrained")
+        scatter_regression(_demo_scatter(), "dose", "activity", ax=ax, xlabel="Compute budget", ylabel="Score")
+        ax.set_title("Relationship with Trend", pad=9)
         made.extend(save_figure(fig, out / "demo_scatter_regression", formats=formats, dpi=dpi))
         plt.close(fig)
         style = setup_theme(style_name)
@@ -1930,6 +2006,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--demo",
         choices=[
             "all",
+            "readme-gallery",
             "bars",
             "bar",
             "violin",
@@ -1955,6 +2032,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--dpi", type=int, default=450, help="Raster export DPI.")
     parser.add_argument("--style", choices=sorted(STYLE_PRESETS), default="rl_benchmark", help="Figure style preset.")
     parser.add_argument("--palette", choices=sorted(PALETTES), default="rl_pastel", help="Categorical palette.")
+    parser.add_argument("--list-styles", action="store_true", help="Print available figure style preset names.")
     parser.add_argument("--list-palettes", action="store_true", help="Print available categorical palette names.")
     parser.add_argument("--data", help="Optional CSV/TSV/Excel file to plot instead of demo data.")
     parser.add_argument(
@@ -1994,6 +2072,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--annotate-values", action="store_true", help="Add direct value labels to bar charts.")
     parser.add_argument("--legend-panel", action="store_true", help="Use a dedicated legend panel when supported.")
     args = parser.parse_args(argv)
+
+    if args.list_styles:
+        for name in sorted(STYLE_PRESETS):
+            print(name)
+        return 0
 
     if args.list_palettes:
         for name in sorted(PALETTES):

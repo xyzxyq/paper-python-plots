@@ -43,6 +43,59 @@ TOP_PAPER_PALETTES = {
     ],
 }
 
+WEB_INSPIRED_PALETTES = {
+    "soft_edge_vivid": [
+        "#6182CC",
+        "#41AB5D",
+        "#EF3B2C",
+        "#807DBA",
+        "#F16913",
+        "#4EB3D3",
+        "#DD3497",
+        "#BF812D",
+    ],
+    "ml_conference": [
+        "#1F77B4",
+        "#FF7F0E",
+        "#2CA02C",
+        "#D62728",
+        "#9467BD",
+        "#8C564B",
+        "#17BECF",
+        "#7F7F7F",
+    ],
+    "nature_muted": [
+        "#4E79A7",
+        "#59A14F",
+        "#F28E2B",
+        "#E15759",
+        "#76B7B2",
+        "#B07AA1",
+        "#9C755F",
+        "#BAB0AC",
+    ],
+    "colorblind_bright": [
+        "#0072B2",
+        "#E69F00",
+        "#009E73",
+        "#D55E00",
+        "#CC79A7",
+        "#56B4E9",
+        "#F0E442",
+        "#000000",
+    ],
+    "scientific_sequential": [
+        "#F7FCF0",
+        "#E0F3DB",
+        "#CCEBC5",
+        "#A8DDB5",
+        "#7BCCC4",
+        "#4EB3D3",
+        "#2B8CBE",
+        "#08589E",
+    ],
+}
+
 SOFT_EDGE_PALETTES = [
     {"fill": ["#eef3f8", "#e0eff2", "#c0daf0", "#9dabd0"], "edge": ["#b9d8f7", "#90b8f1", "#6182cc", "#424d95"]},
     {"fill": ["#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476"], "edge": ["#a1d99b", "#74c476", "#41ab5d", "#238b45"]},
@@ -72,4 +125,11 @@ TOP_PAPER_STYLE_NOTES = {
     "eccv_lowlevel": "Low-level vision panels with qualitative strips, metric callouts, and image-friendly spacing.",
     "icml_dense": "Dense benchmark plots with compact axes, small multiples, and direct labels.",
     "aaai_geo": "Geospatial/social-impact style with maps, calibrated colorbars, and uncertainty panels.",
+}
+
+WEB_STYLE_NOTES = {
+    "SciencePlots": "Paper-style Matplotlib rcParams and journal-like sizing; useful inspiration for compact typography and vector-first exports.",
+    "tueplots": "Publication bundle presets for venues such as ICML/NeurIPS; useful inspiration for explicit figure dimensions.",
+    "CMasher/Colorcet": "Perceptually informed scientific colormaps for heatmaps, uncertainty maps, and continuous fields.",
+    "Seaborn/ColorBrewer/PyPalettes": "Accessible categorical, sequential, and diverging palette families; useful as optional palette adapters.",
 }

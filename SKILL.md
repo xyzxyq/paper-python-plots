@@ -47,7 +47,7 @@ Use this skill when numeric truth matters and the final output should look like 
 ## Bundled Resources
 
 - `scripts/paper_plot.py`
-  Compatibility CLI and import surface. Run `python scripts/paper_plot.py --demo bars --out <folder>` for the default bar-chart style or `--demo qual-grid|metric-suite|ablation-matrix|pareto-scatter|uncertainty-map` for top-paper-inspired styles. `--demo rl-bars` remains available as a compatibility alias. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.xlsx --kind rl-benchmark-grid --panel Panel --group Method --value Score --subtitle Subtitle --orientation Orientation --error Error --display-value Display --out figures`.
+  Compatibility CLI and import surface. Run `python scripts/paper_plot.py --demo bars --out <folder>` for the default bar-chart style or `--demo qual-grid|metric-suite|ablation-matrix|pareto-scatter|uncertainty-map` for top-paper-inspired styles. Use `--demo readme-gallery` to regenerate the open-source README gallery. `--demo rl-bars` remains available as a compatibility alias. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.xlsx --kind rl-benchmark-grid --panel Panel --group Method --value Score --subtitle Subtitle --orientation Orientation --error Error --display-value Display --out figures`.
 - `scripts/paperplots/`
   Layered implementation modules for style registries, palettes, top-paper plotters, and demo data. Prefer adding new families here rather than expanding the CLI file.
 - `scripts/collect_top_paper_figures.py`
@@ -60,12 +60,15 @@ Use this skill when numeric truth matters and the final output should look like 
   Load when polishing style, sizing, legend placement, or deciding whether 3D/polar views are justified.
 - `references/top-paper-style-corpus.md`
   Load when deciding which top-paper-inspired style family to imitate and what local reference cache was used.
+- `references/web-style-resources.md`
+  Load when selecting web-inspired scientific plotting resources, optional palette adapters, or README/open-source positioning.
 - `references/export-checklist.md`
   Load before final delivery or when journal/publisher constraints matter.
 
 ## Implementation Defaults
 
 - Use Matplotlib as the base renderer. Use Seaborn, SciencePlots, statannotations, PtitPrince, CMasher, Colorcet, SciPy, statsmodels, or scikit-posthocs only when installed or when the user approves adding dependencies.
+- Expose optional Seaborn, CMasher, and Colorcet palettes when they are already installed; never make them mandatory for the baseline CLI.
 - Use the `rl_benchmark` implementation for bar figures by default, while calling it the default bar-chart style in user-facing text.
 - Use `soft_edge` for most non-heatmap categorical figures when the user wants the screenshot-like fill/edge aesthetic.
 - Use `cvpr_qualitative`, `eccv_lowlevel`, `icml_dense`, or `aaai_geo` when the user references top-conference result figures, image comparison grids, dense ablations, pareto tradeoffs, or uncertainty/map-like outputs.

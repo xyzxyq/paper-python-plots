@@ -50,12 +50,14 @@ Use these compact recipes to pick a figure form before writing code.
 **Line + SEM/CI ribbon**
 - Use for time courses, dose response, training curves, ablations, and repeated x-values.
 - Show observed x positions with markers, saturated lines, light ribbons, and direct end labels.
+- For top-conference training curves, prefer `soft_edge_vivid`, `ml_conference`, or optional Seaborn colorblind palettes; place the legend below or rely on endpoint labels when there are many methods.
 - Use `soft_edge` for categorical series unless a domain palette is required.
 - Avoid smoothing unless the model is part of the claim.
 
 **Scatter + model line**
 - Use for relationships between two continuous variables.
 - Plot raw points first with light fills and saturated outlines; fit a line only when linearity is reasonable.
+- For method comparisons or trade-offs, use `pareto-scatter` instead of a generic regression plot; show the Pareto frontier, direct labels, and a compact bubble-size legend when size encodes parameters or cost.
 - Highlight the best or key point only when the figure is a method comparison or tradeoff.
 - Include sample size and statistic in caption or annotation, not as oversized title text.
 
