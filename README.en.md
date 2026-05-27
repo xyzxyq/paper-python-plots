@@ -31,6 +31,7 @@ All images below are generated demos from this repository, not copied paper figu
 - You want raw points, SEM/CI, statistical annotations, direct labels, consistent palettes, and vector exports.
 - You want Codex to write reusable Python plotting code based on a target paper style.
 - You want top-conference-inspired layout principles without copying copyrighted paper figures.
+- You want the high-contrast manuscript house style from [figures4papers](https://github.com/ChenLiu-1996/figures4papers) without copying its paper assets or data.
 
 ## Install As A Codex Skill
 
@@ -145,6 +146,7 @@ Show wrong counts as small side badges rather than inside bars.
 | Pareto trade-off | `Draw a Pareto trade-off plot with cost/latency on x, performance on y, Pareto frontier, highlighted key methods, and parameter-size bubbles.` |
 | Qualitative grid | `Draw a CVPR-style qualitative grid with examples as rows, methods as columns, metric badges, and zoom/callout boxes.` |
 | Uncertainty map | `Draw an AAAI/geospatial-style uncertainty map with prediction, uncertainty, residual panels, and compact colorbars.` |
+| figures4papers style | `Use figures4papers house style: Helvetica/Arial-like fonts, semantic blue/green/red colors, black bar edges, direct values, compact y-ranges, and vector export.` |
 
 ## Figure And Style Cheatsheet
 
@@ -159,11 +161,13 @@ Show wrong counts as small side badges rather than inside bars.
 | `--demo ablation-matrix` | Ablation matrices and table-like heatmaps. |
 | `--demo qual-grid` | Qualitative image/result comparisons. |
 | `--demo uncertainty-map` | Prediction, uncertainty, residual, and map-like panels. |
+| `--demo figures4papers` | Integrated grouped bars, trend, heatmap, and concept-panel demo inspired by ChenLiu-1996/figures4papers. |
 
 | Style | Best For |
 |---|---|
 | `rl_benchmark` | Default bar-chart style. The name is kept for compatibility; user-facing docs call it Bar Charts. |
 | `nn_report` | Neural-network, OCR, classification, training-curve, ablation, and error-reduction reports. |
+| `figures4papers` | High-contrast manuscript house style with semantic colors, black bar edges, compact panels, and vector-first export. |
 | `paper_showcase` | General top-paper visual polish. |
 | `cvpr_qualitative` | Qualitative grids, method columns, metric badges, and zoom callouts. |
 | `icml_dense` | Training curves, ablation matrices, metric suites, and Pareto trade-offs. |

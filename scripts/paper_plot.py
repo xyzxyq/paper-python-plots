@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 
 from paperplots import (
+    FIGURES4PAPERS_DEFAULT_COLORS,
     SOFT_EDGE_EDGES,
     SOFT_EDGE_FILLS,
     SOFT_EDGE_PALETTES,
@@ -37,6 +38,7 @@ from paperplots import (
     ablation_matrix_plot,
     classification_report_figure,
     demo_ablation_matrix,
+    demo_figures4papers_house_style,
     demo_metric_suite,
     demo_nn_report_figures,
     demo_pareto_scatter,
@@ -80,6 +82,7 @@ STYLE_PRESETS = {
     "paper_showcase": FigureStyle("paper_showcase", 9.6, 0.92, 0.78, 3.0, 1.65, 4.4, 0.95, True),
     "nn_report": FigureStyle("nn_report", 8.8, 0.9, 0.78, 3.0, 1.45, 4.2, 0.92, True),
     "deep_learning_report": FigureStyle("deep_learning_report", 8.8, 0.9, 0.78, 3.0, 1.45, 4.2, 0.92, True),
+    "figures4papers": FigureStyle("figures4papers", 12.0, 1.6, 1.2, 4.2, 2.2, 5.0, 1.35, False),
 }
 
 
@@ -194,6 +197,7 @@ PALETTES = {
     "okabe_ito": OKABE_ITO,
     "journal_muted": JOURNAL_MUTED,
     "nature_soft": NATURE_SOFT,
+    "figures4papers": FIGURES4PAPERS_DEFAULT_COLORS,
     **TOP_PAPER_PALETTES,
 }
 
@@ -1638,7 +1642,18 @@ def _demo_rl_panels() -> list[dict[str, object]]:
 
 def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style_name: str = "rl_benchmark") -> list[Path]:
     if kind == "readme-gallery":
-        selected = ["bars", "nn-report", "sem-palettes", "violin", "line", "ablation-matrix", "pareto-scatter", "qual-grid", "uncertainty-map"]
+        selected = [
+            "bars",
+            "nn-report",
+            "sem-palettes",
+            "violin",
+            "line",
+            "ablation-matrix",
+            "pareto-scatter",
+            "qual-grid",
+            "uncertainty-map",
+            "figures4papers",
+        ]
         made: list[Path] = []
         for item in selected:
             made.extend(demo(item, out_dir, formats, dpi, style_name=style_name))
@@ -1805,6 +1820,13 @@ def demo(kind: str, out_dir: str | Path, formats: Sequence[str], dpi: int, style
         setup_theme("aaai_geo")
         fig = demo_uncertainty_map()
         made.extend(save_figure(fig, out / "demo_uncertainty_map", formats=formats, dpi=dpi))
+        plt.close(fig)
+        style = setup_theme(style_name)
+
+    if kind in {"figures4papers", "all"}:
+        setup_theme("figures4papers")
+        fig = demo_figures4papers_house_style()
+        made.extend(save_figure(fig, out / "demo_figures4papers", formats=formats, dpi=max(dpi, 300)))
         plt.close(fig)
         style = setup_theme(style_name)
 
@@ -2171,6 +2193,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "ablation-matrix",
             "pareto-scatter",
             "uncertainty-map",
+            "figures4papers",
         ],
         default="all",
         help="Demo figure type to render.",

@@ -18,6 +18,12 @@ Use these compact recipes to pick a figure form before writing code.
 - Use black edges, optional hatches, and direct value labels when exact comparison matters.
 - Move long method names into a legend panel instead of crowding the x-axis.
 
+**figures4papers grouped bars**
+- Use when the user references ChenLiu-1996/figures4papers or wants a high-contrast manuscript result panel.
+- Import `paperplots.figures4papers` or run `--demo figures4papers` for the reusable helper API.
+- Prefer semantic blue/green/red/neutral colors, black bar edges, value labels, and a tightened y-axis only when it does not mislead the scale.
+- For many methods or metrics, use an ultra-wide canvas or dedicate one axis to the legend.
+
 **Leaderboard bars**
 - Use for a single metric with many methods.
 - Sort descending unless the domain has a fixed order.
@@ -69,6 +75,7 @@ Use these compact recipes to pick a figure form before writing code.
 - Always include a colorbar label with units or score definition.
 - Annotate compact matrices and choose white/black cell text by actual color luminance.
 - Rotate tick labels only as much as needed; abbreviate long names.
+- For figures4papers-style heatmaps, keep axes simple, use compact labels, and reserve annotations for matrices small enough to remain readable after paper-column scaling.
 
 **Ablation matrix**
 - Use for dense component/configuration results, especially ICML-style ablations.

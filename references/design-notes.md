@@ -30,6 +30,19 @@ Use `--style ai_conference` for ML, AI, benchmark, and systems-paper figures. Th
 - Wide layouts for multi-metric comparison.
 - Direct value labels on bars when small differences matter.
 
+## figures4papers House Style
+
+Use `--demo figures4papers`, `--style figures4papers`, or `paperplots.figures4papers` when the user asks for ChenLiu-1996/figures4papers-like output. The integrated style favors:
+
+- Helvetica/Arial-like sans typography with editable PDF/SVG text.
+- Semantic blue, green, red/pink, neutral, and gold callout colors.
+- Strong black bar edges, optional hatches, and direct values for manuscript comparison bars.
+- Tight y-axis ranges for close scores, but only when the caption or axis makes the scale clear.
+- Ultra-wide multi-metric layouts and dedicated legend panels when method names are long.
+- Lightweight trend/heatmap/concept-panel helpers instead of copying project-specific figure scripts.
+
+Keep the copyright boundary clear: reuse style principles and helper patterns, not source-repo assets, data, or paper claims.
+
 ## Wide Panels
 
 Use a wide canvas when comparing many methods across metrics. A 3-4x width-to-height ratio is acceptable for benchmark strips. Put each metric in its own panel when y-ranges differ.

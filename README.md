@@ -30,6 +30,7 @@
 - 你正在写神经网络、深度学习、OCR、分类识别、消融实验或课程大作业报告。
 - 你希望图中有原始点、SEM/CI、错误数、直接标签、统一配色和矢量导出。
 - 你想参考顶会论文结果图的布局、层级、配色和信息密度，但不复制任何论文原图。
+- 你想复用 [figures4papers](https://github.com/ChenLiu-1996/figures4papers) 的高对比 manuscript house style，而不是复制其中的论文素材。
 
 ## 安装为 Codex Skill
 
@@ -182,6 +183,7 @@ Use $paper-python-plots.
 | Pareto 权衡 | `请画 Pareto trade-off 图，x 轴为成本/延迟，y 轴为性能，标出 Pareto frontier、重点方法和参数量气泡图例。` |
 | 定性结果网格 | `请画 CVPR-style qualitative grid，按样例为行、方法为列，加入指标 badge、局部 zoom 或 callout。` |
 | 地图/不确定性 | `请画 AAAI/geospatial-style uncertainty map，包含 prediction、uncertainty、residual 三个面板和紧凑 colorbar。` |
+| figures4papers 风格 | `请使用 figures4papers house style：Helvetica/Arial 字体、蓝绿红语义配色、黑色柱边、直接数值、紧凑 y 轴和矢量导出。` |
 
 ## 图型与风格速查
 
@@ -196,11 +198,13 @@ Use $paper-python-plots.
 | `--demo ablation-matrix` | 消融矩阵 / 表格热力图。 |
 | `--demo qual-grid` | 图像/结果定性对比。 |
 | `--demo uncertainty-map` | 不确定性、残差、地图式结果图。 |
+| `--demo figures4papers` | ChenLiu-1996/figures4papers 启发的 grouped bars、trend、heatmap、concept panel 综合示例。 |
 
 | Style | 适合场景 |
 |---|---|
 | `nn_report` | 神经网络、深度学习、OCR、分类实验、训练曲线、错误减少和课程报告。 |
 | `rl_benchmark` | 默认柱状图风格。名字保留用于兼容旧版本，对外可理解为 Bar Charts。 |
+| `figures4papers` | figures4papers house style：高对比 sans 字体、语义蓝绿红配色、黑色柱边、紧凑多面板和矢量优先导出。 |
 | `paper_showcase` | 通用顶会论文结果图审美。 |
 | `cvpr_qualitative` | 定性结果网格、方法列、metric badge、zoom callout。 |
 | `icml_dense` | 训练曲线、消融矩阵、metric suite、Pareto trade-off。 |

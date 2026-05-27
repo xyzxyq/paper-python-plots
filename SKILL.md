@@ -29,6 +29,7 @@ Use this skill when numeric truth matters and the final output should look like 
 - **ICML dense results**: use `icml_dense` for ablation matrices, metric suites, compact benchmark curves, pareto tradeoffs, and multi-metric dashboards.
 - **AAAI geospatial/social-impact results**: use `aaai_geo` for map-like heatmaps, uncertainty maps, calibrated colorbars, regional comparisons, and satellite/remote-sensing result panels.
 - **AI benchmark comparisons**: use `ai_conference` only when the user wants a stronger modern bar-chart look rather than the lighter RL-paper style.
+- **figures4papers-style manuscript figures**: use `figures4papers` when the user explicitly references ChenLiu-1996/figures4papers or wants its house style: high-contrast sans typography, semantic blue/green/red/neutral colors, strong black bar edges, tightened y-ranges, ultra-wide comparison panels, dedicated legend panels, trend lines, heatmaps, radar/polar comparisons, and vector-first export. Do not copy project-specific paper assets; reuse the style grammar on the user's own data.
 - **Mean comparisons**: keep the accepted bar+raw points+SEM look: screenshot-style light fills, saturated edges, raw points, and SEM bars. Use it only when the mean is the claim.
 - **Distributions**: use the upgraded violin/box/raw-point style with `soft_edge` fill/edge colors, mean diamonds, and restrained grid panels.
 - **Time/course or dose response**: use line plots with confidence intervals or SEM ribbons, visible markers, direct end labels, and the screenshot-inspired `soft_edge` palette.
@@ -51,6 +52,8 @@ Use this skill when numeric truth matters and the final output should look like 
   Compatibility CLI and import surface. Run `python scripts/paper_plot.py --demo bars --out <folder>` for the default bar-chart style or `--demo nn-report|qual-grid|metric-suite|ablation-matrix|pareto-scatter|uncertainty-map` for specialized paper styles. Use `--demo sem-palettes` to show the accepted raw-points+SEM style across major screenshot-inspired color families, and `--demo readme-gallery` to regenerate the open-source README gallery. `--demo rl-bars` remains available as a compatibility alias. It can also plot common CSV/TSV/Excel tables directly, for example `python scripts/paper_plot.py --data results.csv --kind classification-report --group method --value accuracy --y macro_f1 --error wrong --series family --style nn_report --out figures`.
 - `scripts/paperplots/`
   Layered implementation modules for style registries, palettes, top-paper plotters, and demo data. Prefer adding new families here rather than expanding the CLI file.
+- `scripts/paperplots/figures4papers.py`
+  Reusable helpers derived from the public figures4papers skill contract and project scripts: `apply_figures4papers_style`, `create_subplots`, `finalize_figure`, grouped bars, trends, heatmaps, scatter, and conceptual sphere panels. Run `python scripts/paper_plot.py --demo figures4papers --out <folder>` to inspect the integrated house-style demo.
 - `scripts/collect_top_paper_figures.py`
   Local-only research collector for downloading public PDFs and rendering/cropping candidate result figures into `research_cache/top_paper_figures/`. The cache is ignored by git and must not be published.
 - `references/plot-recipes.md`
@@ -63,6 +66,8 @@ Use this skill when numeric truth matters and the final output should look like 
   Load when deciding which top-paper-inspired style family to imitate and what local reference cache was used.
 - `references/web-style-resources.md`
   Load when selecting web-inspired scientific plotting resources, optional palette adapters, or README/open-source positioning.
+- `references/figures4papers.md`
+  Load when the user asks for ChenLiu-1996/figures4papers style, when adapting a project-specific `figure_*` script into reusable code, or when choosing between this style and the existing default bar/AI/top-paper families.
 - `references/export-checklist.md`
   Load before final delivery or when journal/publisher constraints matter.
 
@@ -77,6 +82,7 @@ Use this skill when numeric truth matters and the final output should look like 
 - For RL/AI benchmark grids, pair `--style rl_benchmark` with `--palette rl_pastel`.
 - For RL/AI bar grids, use square fill/edge legend swatches. Reserve marker shapes for line/curve plots that actually draw markers.
 - Use semantic colors: blue for proposed/key method, green for gains/improvements, red/pink for baselines or contrasts, neutral gray for references/background, gold for a single highlight.
+- For `figures4papers`, prefer `--style figures4papers --palette figures4papers`, or import from `paperplots.figures4papers` when the task benefits from the explicit helper API. Use `dpi=300` by default and raise to 600 for dense comparison bars.
 - Use `layout="constrained"` for new figures where possible. Avoid calling `tight_layout()` after constrained layout unless adapting external code.
 - Use Helvetica/Arial-like sans-serif fonts by default and include CJK-capable fallbacks when Chinese labels may appear.
 - Keep figures at final publication size from the start; avoid resizing text-heavy plots after export.
